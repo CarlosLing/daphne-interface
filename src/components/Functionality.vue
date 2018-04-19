@@ -22,6 +22,9 @@
     import EOSSFilter from './EOSSFilter';
     import FeatureApplication from './FeatureApplication';
 
+    // Anomaly detection
+    import AnomalyDetection from './AnomalyDetection';
+
     let sizeScale = [
         'one-third',
         'two-thirds',
@@ -43,7 +46,8 @@
             DaphneAnswer,
             DataMining,
             EOSSFilter,
-            FeatureApplication
+            FeatureApplication,
+            AnomalyDetection
         },
         computed: {
             sizeClass: function () {

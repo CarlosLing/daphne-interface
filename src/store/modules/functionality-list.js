@@ -1,6 +1,20 @@
 import * as _ from 'lodash-es';
 
 let functionalityTypes = new Map();
+
+// Anomaly Code
+functionalityTypes.set('AnomalyDetection', {
+    title: 'Anomaly Detection',
+    component: 'AnomalyDetection',
+    class: 'anomaly-detection',
+    minSize: 'two-thirds',
+    maxRepeat: 1,
+    optionsList: [
+        // Here we will be listing all the methods implemented
+        {name: "", value: ""},
+        {name: "Windowed Statistic Method", value: "ADWindowedStats"}
+    ]});
+
 functionalityTypes.set('DaphneAnswer', { title: 'Answers', component: 'DaphneAnswer', class: 'answers', minSize: 'one-third', maxRepeat: 1});
 functionalityTypes.set('DesignBuilder', { title: 'Design Builder', component: 'DesignBuilder', class: 'design-builder', minSize: 'two-thirds', maxRepeat: 1});
 functionalityTypes.set('DataMining', { title: 'Data Mining', component: 'DataMining', class: 'data-mining', minSize: 'one-third', maxRepeat: 1});
@@ -59,6 +73,7 @@ const state = {
     availableFunctionalities: [
         { name: 'DaphneAnswer', title: 'Answers', icon: 'fa-comments' },
         { name: 'DesignBuilder', title: 'Design Builder', icon: 'fa-search' },
+        { name: 'AnomalyDetection', title: 'Anomaly Detection', icon: 'fa-chart-bar' },
         { name: 'DataMining', title: 'Data Mining', icon: 'fa-chart-bar' },
         { name: 'EOSSFilter', title: 'Filter', icon: 'fa-filter' },
         { name: 'FeatureApplication', title: 'Feature Application', icon: 'fa-sitemap' },
@@ -70,6 +85,7 @@ const state = {
     functionalityCount: {
         'DaphneAnswer': 0,
         'DesignBuilder': 0,
+        'AnomalyDetection': 0,
         'DataMining': 0,
         'EOSSFilter': 0,
         'FeatureApplication': 0,

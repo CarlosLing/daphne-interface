@@ -33,7 +33,7 @@
                 </nav>
                 <section class="section is-small">
                     <div class="columns is-mobile">
-                        <tradespace-plot></tradespace-plot>
+                        <anomaly-plot></anomaly-plot>
                     </div>
                     <functionality-list></functionality-list>
                 </section>
@@ -58,6 +58,7 @@
     import Timer from './Timer';
     import QuestionBar from './QuestionBar';
     import TradespacePlot from './TradespacePlot';
+    //import AnomalyPlot from './AnomalyPlot'
     import FunctionalityList from './FunctionalityList';
     import Modal from './Modal';
 
@@ -65,6 +66,7 @@
     import EOSSFilter from '../scripts/eoss-filter';
 
     import { mapGetters } from 'vuex';
+    import AnomalyPlot from "./AnomalyPlot";
 
     let introJs = require('intro.js').introJs;
 
@@ -126,7 +128,7 @@
                 this.isModalActive = false;
             }
         },
-        components: { MainMenu, Timer, QuestionBar, TradespacePlot, FunctionalityList, Modal },
+        components: {AnomalyPlot, MainMenu, Timer, QuestionBar, TradespacePlot, FunctionalityList, Modal },
         mounted() {
             // Tutorial
             this.tutorial = introJs();
@@ -147,15 +149,19 @@
                 }
             });*/
 
-            this.$store.commit('addFunctionality', 'DesignBuilder');
-            this.$store.commit('addFunctionality', 'DataMining');
-            this.$store.commit('addFunctionality', 'FeatureApplication');
-            this.$store.commit('addFunctionality', 'EOSSFilter');
-            this.$store.commit('addFunctionality', 'DaphneAnswer');
-            this.$store.commit('addFunctionality', 'OrbitInstrInfo');
-            this.$store.commit('addFunctionality', 'AvailableCommands');
-            this.$store.commit('addFunctionality', 'CommandsInformation');
+            this.$store.commit('addFunctionality', 'AnomalyDetection');
+            // this.$store.commit('addFunctionality', 'DesignBuilder');
+            // this.$store.commit('addFunctionality', 'DataMining');
+            // this.$store.commit('addFunctionality', 'FeatureApplication');
+            // this.$store.commit('addFunctionality', 'EOSSFilter');
+            // this.$store.commit('addFunctionality', 'DaphneAnswer');
+            // this.$store.commit('addFunctionality', 'OrbitInstrInfo');
+            // this.$store.commit('addFunctionality', 'AvailableCommands');
+            // this.$store.commit('addFunctionality', 'CommandsInformation');
             this.$store.dispatch('loadNewData', 'EOSS_data_recalculated.csv');
+
+            // New Anomaly detection code
+            this.$store.dispatch('loadAnomalyData', 'sample.csv');
         },
         watch: {
             experimentStage: function (val, oldVal) {

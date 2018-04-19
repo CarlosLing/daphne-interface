@@ -8,6 +8,9 @@ import dataMining from './modules/data-mining';
 import filter from './modules/filter';
 import featureApplication from './modules/feature-application';
 import experiment from './modules/experiment';
+// Anomaly code
+import anomaly from './modules/anomaly-problem';
+import anomalyPlot from './modules/anomaly-plot';
 
 Vue.use(Vuex);
 
@@ -32,6 +35,8 @@ export default new Vuex.Store({
         daphne,
         problem,
         tradespacePlot,
+        anomaly,
+        anomalyPlot,
         functionalityList,
         dataMining,
         filter,

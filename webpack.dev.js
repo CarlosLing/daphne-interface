@@ -13,6 +13,11 @@ module.exports = merge(common, {
                 target: 'http://localhost:8001/',
                 changeOrigin: true,
                 ws: true
+            },
+            '/static': {
+                target: 'http://localhost:8001/',
+                changeOrigin: true,
+                ws: true
             }
         }
     },
