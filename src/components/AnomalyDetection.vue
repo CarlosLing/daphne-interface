@@ -31,7 +31,7 @@
 </template>
 
 <script>
-    import {mapGetters, mapMutations} from 'vuex'
+    import {mapGetters} from 'vuex'
 
     export default {
         name: "AnomalyDetection",
@@ -60,7 +60,7 @@
                 this.algorithmsParameters = this.getAlgorithmParameters(this.selectedAlgorithm)
             },
 
-            selectVariable() { // ToDo when selected a variable variable must be plotted : change plot data index
+            selectVariable() {
                 this.$store.commit("updateVariableChosen", this.selectedVariable)
             },
             runAlgorithm(){

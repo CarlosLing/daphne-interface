@@ -150,6 +150,7 @@
             });*/
 
             this.$store.commit('addFunctionality', 'AnomalyDetection');
+            this.$store.commit('addFunctionality', 'DataLoader');
             // this.$store.commit('addFunctionality', 'DesignBuilder');
             // this.$store.commit('addFunctionality', 'DataMining');
             // this.$store.commit('addFunctionality', 'FeatureApplication');
