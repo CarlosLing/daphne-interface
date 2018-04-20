@@ -1,25 +1,49 @@
+import store from "../index";
 
 let algorithmsInfo= new Map();
 
+// Note that new algorithms must be included in the Option list of Anomaly Detection in './functionality-list.js'
 algorithmsInfo.set('ADWindowedStats', {
     name: "Windowed Statistic Method",
     parameters:[
-        {description: "Window Parameter", variable: "w", defaultValue: 100, value: 100, varType:"int"},
-        {description: "Threshold in STD", variable: "tstd", defaultValue: 3, value: 3, varType:"float"}]
+        {name: "Window Parameter", variable: "w", defaultValue: 100, value: 100, varType:"int",
+            description: "Fixes the number of observations before the data to be analyzed. \nA higher number implies the anomaly detected is an outlier in a more general context, while a smaller number will imply that the anomaly is local"},
+        {name: "Threshold in STD", variable: "tstd", defaultValue: 3, value: 3, varType:"float",
+            description: "Fixes the degree of confidence with which we classify the data as an anomaly. A higher threshold means we are detecting extremer outliers"}],
+    multiVariate: false
 });
 
+algorithmsInfo.set('SARIMAX_AD', {
+    name: "Seasonal ARIMA + Exogenous Variables",
+    parameters:[
+        {name: "Seasonality", variable: "seasonality", defaultValue: 24, value: 24, varType:"int",
+            description: "Indicates the seasonality assumed for the data. This means that the data is considered " +
+            "to be related with the n element"},
+        {name: "Confidence interval", variable: "ci_alpha", defaultValue: 0.01, value: 0.01, varType:"float",
+            description: "Fixes the degree of confidence with which we classify the data as an anomaly. A lower " +
+            "value implies a higher confidence on the anomalies detected. This value must be between 0 and 1"},
+        {name: "Auto Regression and Moving average parameters range", variable: "range_pq", defaultValue: 3, value:3,
+            varType: "int", description: "Fixes the range of the parameters p and q of the ARIMA model. A higher " +
+            "number results on exponentially more calculation time, and might no significantly improve the prediction" +
+            "results for anomaly detection. It is recommended not to exceed the default value"}
+    ],
+    multiVariate: true
+});
 
 const state = {
     anomalyProblemData: [],
     anomalyVariables: [],
     allDetectedAnomalies: [],
+    variableChosen: [],
+
     // Algorithms for which an API was implemented
     methodsAPI: ["ADWindowedStats"],
+    methodsWS: ["SARIMAX_AD"],
 
     algorithmParameters: [],
     chosenAlgorithm: "None",
-    currentDetectedAnomalies: []
-
+    currentDetectedAnomalies: [],
+    websocketAD: null
 };
 
 const getters = {
@@ -31,8 +55,8 @@ const getters = {
         return state.anomalyVariables;
     },
 
-    getMethodsAPI(state){
-        return state.methodsAPI;
+    getVariableChosen(state) {
+        return state.variableChosen;
     },
 
     getCurrentDetectedAnomalies(state) {
@@ -58,12 +82,24 @@ const getters = {
 
 const actions = {
 
-    async detectAnomalies({state, getters, commit}, Method) { //TODO Implement a Functionality to this
-        console.log("Running Anomaly detection algorithm")
-
+    async detectAnomalies({state, getters, commit}, Method) {
         try {
             let reqData = new FormData();
+
+            // Add the data to the request
             reqData.append('data', JSON.stringify(getters.getAnomalyProblemData));
+
+
+            // Add the parameters to the request
+            state.algorithmParameters.forEach((parameter) => {
+                if (parameter.varType === "int") {
+                    reqData.append(parameter.variable, "" + parseInt(parameter.value))
+                }
+                else if (parameter.varType === "float"){
+                    reqData.append(parameter.variable, "" + parseFloat(parameter.value))
+                }
+            });
+            console.log(JSON.stringify(reqData));
             if (state.methodsAPI.includes(Method)) {
                 console.log("Running Anomaly detection method (" + Method +") from API")
                 let dataResponse = await fetch(
@@ -82,8 +118,8 @@ const actions = {
                         // TODO: Implement this to show it on the web
                     }
                     else {
-                        commit("addDetectedAnomalies", data)
-                        commit("updateCurrentDetectedAnomalies", data)
+                        commit("addDetectedAnomalies", data);
+                        commit("updateCurrentDetectedAnomalies", data);
                     }
                 }
                 else {
@@ -91,27 +127,56 @@ const actions = {
                 }
 
             }
+            else if (state.methodsWS.includes(Method)){
+
+                console.log("Running Anomaly detection method (" + Method + ") from WS");
+                console.log(state.algorithmParameters);
+                const websocketPromise = new Promise((resolve, reject) => {
+
+                    // Websocket connection
+                    let websocket = new WebSocket(((window.location.protocol === 'https:') ? 'wss://' : 'ws://')
+                        + window.location.host + '/api/anomaly/' + Method);
+
+                    websocket.onopen = function() {
+                        console.log('Web Socket Conenction Made');
+                        resolve();
+                    };
+
+                    websocket.onmessage = function (message) {
+                        console.log(message);
+                        let data = JSON.parse(message.data);
+                        console.log(data);
+                        if (data.includes('error')) {
+                            console.error('Internal Algorithm error: ' + data['error']);
+                            // TODO: Implement this to show it on the web
+                        }
+                        else {
+                            commit("addDetectedAnomalies", data);
+                            commit("updateCurrentDetectedAnomalies", data);
+                        }
+                    };
+                    store.commit('setWebsocketAD', websocket);
+
+                });
+
+                websocketPromise.then(() => {
+                    console.log("OK");// todo websocket does not recieve JSON
+                    console.log(JSON.stringify(reqData));
+                    state.websocketAD.send(JSON.stringify(reqData));
+                });
+            }
         }
         catch (e) {
             console.log("Networking error: ", e)
         }
-
     },
 
-    async loadAnomalyData({state, commit}, fileName) {
+    async loadAnomalyData({commit}, fileName) {
         console.log("importing anomaly data...");
 
         try {
             let reqData = new FormData();
             reqData.append('filename', fileName);
-            state.algorithmParameters.forEach((parameter) => {
-                if (parameter.varType === "int") {
-                    reqData.append(parameter.variable, "" + parseInt(parameter.value))
-                }
-                else if (parameter.varType === "float"){
-                    reqData.append(parameter.variable, "" + parseFloat(parameter.value))
-                }
-            });
             let dataResponse = await fetch (
                 '/api/anomaly/import-data',
                 {
@@ -160,7 +225,15 @@ const mutations = {
 
     updateChosenAlgorithm(state, newChosenAlgorithm) {
         state.chosenAlgorithm = newChosenAlgorithm
-    }
+    },
+
+    setWebsocketAD(state,websocket) {
+        state.websocketAD = websocket;
+    },
+
+    updateVariableChosen(state, variable) {
+        state.variableChosen = variable;
+    },
 
 };
 

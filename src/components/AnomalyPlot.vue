@@ -82,6 +82,7 @@
             ...mapGetters({
                 anomalyProblemData: 'getAnomalyProblemData',
                 currentDetectedAnomalies: 'getCurrentDetectedAnomalies',
+                variableChosen: 'getVariableChosen',
                 plotData: 'getPlotData',
                 colorMap: 'getColorMap',
                 hoveredArch: 'getHoveredArch',
@@ -434,8 +435,8 @@
                 this.$store.dispatch('updatePlotData', val);
             },
 
-            anomalyProblemData: function(val, oldVal) {
-                this.updatePlot('timestamp', 'value');
+            variableChosen: function(val, oldVal) {
+                this.updatePlot('timestamp', val);
             },
 
             currentDetectedAnomalies: function(val, oldVal) {

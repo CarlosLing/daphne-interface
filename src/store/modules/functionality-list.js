@@ -11,9 +11,12 @@ functionalityTypes.set('AnomalyDetection', {
     maxRepeat: 1,
     optionsList: [
         // Here we will be listing all the methods implemented
+        // Algorithms parameters are defined in algorithmsInfo in 'anomaly-problem'
         {name: "", value: ""},
-        {name: "Windowed Statistic Method", value: "ADWindowedStats"}
-    ]});
+        {name: "Windowed Statistic Method", value: "ADWindowedStats"},
+        {name: "Seasonal ARIMA + Exogenous Variables", value: "SARIMAX_AD"}
+    ]
+});
 
 functionalityTypes.set('DaphneAnswer', { title: 'Answers', component: 'DaphneAnswer', class: 'answers', minSize: 'one-third', maxRepeat: 1});
 functionalityTypes.set('DesignBuilder', { title: 'Design Builder', component: 'DesignBuilder', class: 'design-builder', minSize: 'two-thirds', maxRepeat: 1});
