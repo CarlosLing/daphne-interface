@@ -22,6 +22,7 @@
     "lodash-es": "^4.17.8",
     "speechkitt": "^1.0.0",
     "vue": "^2.5.16",
+    "vue-clip": "^1.0.0",
     "vuedraggable": "^2.16.0",
     "vuex": "^3.0.1"
   },

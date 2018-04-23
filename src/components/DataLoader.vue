@@ -13,7 +13,19 @@
         <div class="panel-block functionality">
             <!--Todo implement functionality to load data sets-->
             <div class="content">
-                <p>Upload your Data by Dragging your .csv file here</p>
+                <div class="file is-large">
+                    <label class="file-label">
+                        <input class="file-input" type="file" name="resume" @change="onFileChange">
+                        <span class="file-cta">
+                            <span class="file-icon">
+                                <i class="fas fa-upload"></i>
+                            </span>
+                            <span class="file-label">
+                                Upload your .csv file here
+                            </span>
+                        </span>
+                    </label>
+                </div>
             </div>
         </div>
     </div>
@@ -26,6 +38,10 @@
         data() {
             return {
                 selectedDataSet: '',
+                fileInput: '',
+                options: {
+                    url: '/data'
+                }
             }
         },
 
@@ -39,6 +55,29 @@
         methods:{
             loadData(){
                 this.$store.dispatch('loadAnomalyData', this.selectedDataSet)
+            },
+            onFileChange() {
+                let  fileField = document.querySelector("input[type='file']");
+
+                this.$store.dispatch('loadAnomalyDataFromFile', fileField.files[0]);
+
+                // let files = e.target.files || e.dataTransfer.files;
+                // console.log(files[0]);
+                // if (!files.length)
+                //     return;
+                // this.createInput(files[0]);
+            },
+
+            createInput(file) {
+                let reader = new FileReader();
+                let vm = this;
+                reader.onload = (e) => {
+
+                    vm.fileinput = reader.result;
+                };
+                reader.readAsText(file);
+
+                console.log(this.fileinput);
             }
         }
 

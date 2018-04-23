@@ -208,6 +208,36 @@ const actions = {
             console.error('Networking error: ', e);
 
         }
+    },
+
+    async loadAnomalyDataFromFile({commit}, file) {
+        console.log("loading anomaly data...");
+
+        try {
+            let reqData = new FormData();
+            reqData.append('file', file);
+            let dataResponse = await fetch (
+                '/api/anomaly/read-data',
+                {
+                    method: 'POST',
+                    body: reqData,
+                    credentials: 'same-origin'
+                }
+            );
+
+            if (dataResponse.ok) {
+                let data = await dataResponse.json();
+                commit('updateAnomalyData', data['data']);
+                commit('updateAnomalyVariables', data['variables']);
+            }
+            else{
+                console.error('Error accessing the data');
+            }
+        }
+        catch (e) {
+            console.error('Networking error: ', e);
+
+        }
     }
 };
 
