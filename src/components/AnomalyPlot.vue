@@ -6,6 +6,18 @@
                 <!-- TODO: Desing Heading Text -->
                 Anomalies detected: {{numberAnomalies}}  | Anomaly detection method: {{chosenAlgorithm}}
             </p>
+            <div>
+                <div class="tabs is centered" id="plot-tabs">
+                    <ul>
+                        <li id="tab_oneVariable" class="is-active" v-on:click="selectTabOption('oneVariable')">
+                            <a><span>Time series</span></a>
+                        </li>
+                        <li id="tab_multiVariable" v-on:click="selectTabOption('multiVariable')">
+                            <a><span>MultiVariate</span></a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
             <div class="panel-block" id="main-plot-block">
                 <div id="main-plot"></div>
                 <div id="selections-block">
@@ -40,6 +52,14 @@
                         </div>
                     </div>
                     <div class="card">
+                        <div class="tooltip">
+                            <label class="checkbox">
+                                <input type="checkbox" v-model="plotOverlap">
+                                Overlap both plots
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card">
                         <div class="card-content is-small">
                             <div class="field">
                                 <p class="control">
@@ -64,8 +84,10 @@
         name: 'anomaly-plot',
         data() {
             return {
+                plotOverlap:  false,
+                anomalyScoreName: "occupancy_t4013",
                 mainPlotParams: {
-                    margin: {top: 20, right: 20, bottom: 30, left: 90},
+                    margin: {top: 20, right: 30, bottom: 30, left: 90},
                     width: 960,
                     height: 450,
                     scale: 1
@@ -74,15 +96,19 @@
                 zoom: {},
                 xMap: {},
                 yMap: {},
+                yAnomalyScoreMap: {},
                 context: {},
                 hiddenContext: {}
             }
         },
         computed: {
             ...mapGetters({
+                // Todo add getter and a watch in order to keep track of the tab chosen
+                activePlotTab: 'getActivePlotTab',
                 anomalyProblemData: 'getAnomalyProblemData',
                 currentDetectedAnomalies: 'getCurrentDetectedAnomalies',
                 variableChosen: 'getVariableChosen',
+                colorAnomalyPlot: 'getColorAnomalyPlot',
                 plotData: 'getPlotData',
                 colorMap: 'getColorMap',
                 hoveredArch: 'getHoveredArch',
@@ -124,6 +150,14 @@
                 'updateClickedArch',
                 'updateHoveredArch',
             ]),
+
+            selectTabOption(option) {
+                $("#tab_" + this.activePlotTab).removeClass("is-active");
+                this.$store.commit("updateActivePlotTab", option);
+                this.updatePlot('timestamp', this.variableChosen);
+                $("#tab_" + option).addClass("is-active");
+            },
+
             resetMainPlot() {
                 //Resets the main plot
                 d3.select('#main-plot').select('svg').remove();
@@ -134,6 +168,10 @@
             updatePlot(xIndex, yIndex) {
                 this.resetMainPlot();
 
+                // Checks the color in case Plot Overlap is activated:
+                this.$store.commit("updatePlotColors");
+                this.$store.commit("setOverlapColors", this.plotOverlap);
+
                 // Update width
                 this.mainPlotParams.width = document.getElementById('main-plot-block').clientWidth
                     - document.getElementById('selections-block').offsetWidth - 30;
@@ -143,19 +181,25 @@
                 let parseTime = d3.timeParse("%Y-%m-%dT%H:%M:%S.%LZ");
                 let xValue = d => parseTime(d[xIndex]); // data -> value
                 let xScale = d3.scaleTime().range([0, this.plotWidth]); // value -> display
-                // don't want dots overlapping axis, so add in buffer to data domain
-                let xBuffer = Math.max((d3.max(this.anomalyProblemData, xValue) - d3.min(this.anomalyProblemData, xValue)) * 0.05, 0.05);
                 xScale.domain(d3.extent(this.anomalyProblemData, xValue));
                 this.xMap = d => xScale(xValue(d)); // data -> display
                 let xAxis = d3.axisBottom(xScale);
+
                 // setup y
                 let yValue = d => d[yIndex]; // data -> value
-
                 let yScale = d3.scaleLinear().range([this.plotHeight, 0]); // value -> display
                 let yBuffer = Math.max((d3.max(this.anomalyProblemData, yValue) - d3.min(this.anomalyProblemData, yValue)) * 0.05, 0.05);
                 yScale.domain([d3.min(this.anomalyProblemData, yValue) - yBuffer, d3.max(this.anomalyProblemData, yValue) + yBuffer]);
                 this.yMap = d => yScale(yValue(d)); // data -> display
                 let yAxis = d3.axisLeft(yScale);
+
+                // Setup the anomaly score
+                let yAnomalyScore = d => d[this.anomalyScoreName]; // data -> value
+                let yAnomalyScoreScale = d3.scaleLinear().range([this.plotHeight, 0]); // value -> display
+                let yAnomalyScoreBuffer = Math.max((d3.max(this.anomalyProblemData, yAnomalyScore) - d3.min(this.anomalyProblemData, yAnomalyScore)) * 0.05, 0.05);
+                yAnomalyScoreScale.domain([d3.min(this.anomalyProblemData, yAnomalyScore) - yAnomalyScoreBuffer, d3.max(this.anomalyProblemData, yAnomalyScore) + yAnomalyScoreBuffer]);
+                this.yAnomalyScoreMap = d => yAnomalyScoreScale(yAnomalyScore(d)); // data -> display
+                let yAnomalyScoreAxis = d3.axisRight(yAnomalyScoreScale);
 
                 d3.select('#main-plot')
                     .style('width', this.mainPlotParams.width + 'px')
@@ -163,10 +207,10 @@
 
                 this.zoom = d3.zoom()
                     .scaleExtent([0.4, 25])
-                    .on('zoom', d => { //TODO: Limit the movement to the limits of the data
+                    .on('zoom', d => {
                         this.transform = d3.event.transform;
                         gX.call(xAxis.scale(this.transform.rescaleX(xScale)));
-                        gY.call(yAxis.scale(this.transform.rescaleY(yScale)));
+                        //gY.call(yAxis.scale(this.transform.rescaleY(yScale)));
 
                         this.drawAnomalies(this.context);
                     });
@@ -214,31 +258,56 @@
                     .attr('class', 'label')
                     .attr('y', -6)
                     .style('text-anchor', 'end')
-                    .style('font-size', '18px')
-                    .text(this.$store.state.problem.outputList[xIndex]);
-
-                // y-axis
-                let gY = svg.append('g')
-                    .attr('class', 'axis axis-y')
                     .style('font-size', '16px')
-                    .call(yAxis);
+                    .text("TimeStamp");
 
-                svg.append('text')
-                    .attr('class', 'label')
-                    .attr('transform', 'rotate(-90)')
-                    .attr('y', 6)
-                    .attr('dy', '.71em')
-                    .style('text-anchor', 'end')
-                    .style('font-size', '18px')
-                    .text(this.$store.state.problem.outputList[yIndex]);
+                // Chooses the axis to show depending on the selected plot
+                // TODO: implement the possibility of having both plots at the same time
+                if (this.activePlotTab === "oneVariable" || this.plotOverlap) {
+                    // y-axis
+                    let gY = svg.append('g')
+                        .attr('class', 'y axis')
+                        .style('font-size', '16px')
+                        .call(yAxis);
+
+                    svg.append('text')
+                        .attr('class', 'label')
+                        .attr('transform', 'rotate(-90)')
+                        .attr('y', 6)
+                        .attr('dy', '.71em')
+                        .style('text-anchor', 'end')
+                        .style('font-size', '16px')
+                        .text(yIndex);
+
+
+                    gY.call(yAxis.scale(this.transform.rescaleY(yScale)));
+                }
+
+                if (this.activePlotTab === "multiVariable" || this.plotOverlap) {
+                    // y-axis for anomaly score
+                    let gYAS = svg.append('g')
+                        .attr('class', 'y axis')
+                        .attr('transform', 'translate(' + this.plotWidth + ', 0)')
+                        .style('font-size', '16px')
+                        .call(yAnomalyScoreAxis);
+
+                    svg.append('text')
+                        .attr('class', 'label')
+                        .attr('transform', 'rotate(-90) translate(0,' + (this.plotWidth - 22)  + ')')
+                        .attr('y', 6)
+                        .attr('dy', '.71em')
+                        .style('text-anchor', 'end')
+                        .style('font-size', '16px')
+                        .text('Anomaly score');
+
+                    gYAS.call(yAnomalyScoreAxis.scale(yAnomalyScoreScale));
+                }
 
                 // Canvas related functions
-                //this.drawPoints(this.context, false);
                 this.drawAnomalies(this.context);
 
                 // Restore old zoom values if they are there
                 gX.call(xAxis.scale(this.transform.rescaleX(xScale)));
-                gY.call(yAxis.scale(this.transform.rescaleY(yScale)));
 
                 // Canvas interaction
                 let self = this;
@@ -247,43 +316,42 @@
                 canvas.on('click.inspection', function() { self.canvasClick(); });
             },
 
-            drawData(context) {
-                context.clearRect(0, 0, this.plotWidth, this.plotHeight);
-                context.save();
-
-                let x0 = this.transform.applyX(this.xMap(this.anomalyProblemData[0]));
-                let y0 = this.transform.applyY(this.yMap(this.anomalyProblemData[0]));
-                context.beginPath();
-                context.moveTo(x0,y0);
-                this.anomalyProblemData.forEach((point) => {
-                    let tx = this.transform.applyX(this.xMap(point));
-                    let ty = this.transform.applyY(this.yMap(point));
-                    context.lineTo(tx, ty);
-                });
-                context.stroke();
-            },
-
             drawAnomalies(context){
 
                 context.clearRect(0, 0, this.plotWidth, this.plotHeight);
                 context.save();
 
+                // Draw the data
                 let x0 = this.transform.applyX(this.xMap(this.anomalyProblemData[0]));
-                let y0 = this.transform.applyY(this.yMap(this.anomalyProblemData[0]));
+                let y0 = this.yMap(this.anomalyProblemData[0]);
+                context.strokeStyle = this.colorAnomalyPlot.oneVariableStroke;
                 context.beginPath();
                 context.moveTo(x0,y0);
                 this.anomalyProblemData.forEach((point) => {
                     let tx = this.transform.applyX(this.xMap(point));
-                    let ty = this.transform.applyY(this.yMap(point));
+                    let ty = this.yMap(point);
                     context.lineTo(tx, ty);
                 });
                 context.stroke();
 
+                // Draw the anomaly score
+                let y0AS = this.yAnomalyScoreMap(this.anomalyProblemData[0]);
+                context.strokeStyle = this.colorAnomalyPlot.multiVariableStroke;
+                context.beginPath();
+                context.moveTo(x0,y0AS);
+                this.anomalyProblemData.forEach((point) => {
+                    let tx = this.transform.applyX(this.xMap(point));
+                    let ty = this.yAnomalyScoreMap(point);
+                    context.lineTo(tx, ty);
+                });
+                context.stroke();
+
+                // Drw the anomaly points
+                context.fillStyle = this.colorAnomalyPlot.oneVariableAnomaly;
                 this.currentDetectedAnomalies.forEach((point) =>{
                     let tx = this.transform.applyX(this.xMap(point));
-                    let ty = this.transform.applyY(this.yMap(point));
+                    let ty = this.yMap(point);
                     //console.log(tx, ty);
-                    context.fillStyle = 'rgba(255,0,0,255)';
                     context.beginPath();
                     context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
                     context.fill();
@@ -433,6 +501,10 @@
         watch: {
             problemData: function(val, oldVal) {
                 this.$store.dispatch('updatePlotData', val);
+            },
+
+            plotOverlap: function(val, oldVal) {
+                this.updatePlot('timestamp', this.variableChosen);
             },
 
             variableChosen: function(val, oldVal) {
