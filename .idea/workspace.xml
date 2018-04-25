@@ -3,10 +3,10 @@
   <component name="ChangeListManager">
     <list default="true" id="998ed818-06a8-4cd8-8087-c32774c0e061" name="Default" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/components/AnomalyDetection.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AnomalyDetection.vue" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/components/AnomalyPlot.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/components/AnomalyPlot.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/src/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/store/modules/anomaly-plot.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/modules/anomaly-plot.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/store/modules/anomaly-problem.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/modules/anomaly-problem.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/store/modules/functionality-list.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/store/modules/functionality-list.js" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/.tmp/" />
     <ignored path="$PROJECT_DIR$/dist/" />
@@ -20,15 +20,15 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="DockManager">
-    <window id="2">
+    <window id="1">
       <content type="file-editors">
         <state>
-          <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
+          <leaf>
             <file leaf-file-name="anomaly-problem.js" pinned="false" current-in-tab="true">
               <entry file="file://$PROJECT_DIR$/src/store/modules/anomaly-problem.js">
                 <provider selected="true" editor-type-id="text-editor">
-                  <state relative-caret-position="408">
-                    <caret line="99" column="5" selection-start-line="99" selection-start-column="5" selection-end-line="99" selection-end-column="5" />
+                  <state relative-caret-position="459">
+                    <caret line="171" lean-forward="true" selection-start-line="171" selection-end-line="171" />
                   </state>
                 </provider>
               </entry>
@@ -43,8 +43,8 @@
       <file leaf-file-name="Functionality.vue" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/components/Functionality.vue">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="646">
-              <caret line="65" column="32" lean-forward="true" selection-start-line="65" selection-start-column="32" selection-end-line="65" selection-end-column="32" />
+            <state relative-caret-position="1003">
+              <caret line="65" column="32" selection-start-line="65" selection-start-column="32" selection-end-line="65" selection-end-column="32" />
               <folding>
                 <element signature="e#994#1032#0" expanded="true" />
                 <element signature="e#1304#1354#0" expanded="true" />
@@ -56,20 +56,17 @@
       <file leaf-file-name="anomaly-plot.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/store/modules/anomaly-plot.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="321">
-              <caret line="39" column="20" selection-start-line="39" selection-start-column="4" selection-end-line="39" selection-end-column="20" />
+            <state relative-caret-position="112">
+              <caret line="27" column="2" lean-forward="true" selection-start-line="27" selection-start-column="2" selection-end-line="27" selection-end-column="2" />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="AnomalyPlot.vue" pinned="false" current-in-tab="true">
+      <file leaf-file-name="AnomalyPlot.vue" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/components/AnomalyPlot.vue">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="231">
-              <caret line="156" column="64" lean-forward="true" selection-start-line="156" selection-start-column="64" selection-end-line="156" selection-end-column="64" />
-              <folding>
-                <element signature="e#3398#3446#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="-323">
+              <caret line="488" column="21" lean-forward="true" selection-start-line="488" selection-start-column="21" selection-end-line="488" selection-end-column="21" />
             </state>
           </provider>
         </entry>
@@ -78,7 +75,7 @@
         <entry file="file://$PROJECT_DIR$/src/index.html">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="255">
-              <caret line="15" column="7" lean-forward="true" selection-start-line="15" selection-start-column="7" selection-end-line="15" selection-end-column="7" />
+              <caret line="15" column="7" selection-start-line="15" selection-start-column="7" selection-end-line="15" selection-end-column="7" />
             </state>
           </provider>
         </entry>
@@ -86,7 +83,7 @@
       <file leaf-file-name="TradespacePlot.vue" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/components/TradespacePlot.vue">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="367">
+            <state relative-caret-position="17">
               <caret line="162" column="49" selection-start-line="162" selection-start-column="49" selection-end-line="162" selection-end-column="49" />
               <folding>
                 <element signature="e#2880#2928#0" expanded="true" />
@@ -95,11 +92,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="tradespace-plot.js" pinned="false" current-in-tab="false">
+      <file leaf-file-name="tradespace-plot.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/store/modules/tradespace-plot.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="374">
-              <caret line="22" column="19" lean-forward="true" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="19" />
+            <state relative-caret-position="-2040">
+              <caret line="21" column="25" lean-forward="true" selection-start-line="21" selection-start-column="25" selection-end-line="21" selection-end-column="25" />
               <folding>
                 <element signature="n#!!doc" expanded="true" />
               </folding>
@@ -110,8 +107,8 @@
       <file leaf-file-name="AnomalyDetection.vue" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/components/AnomalyDetection.vue">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="102">
-              <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
+            <state relative-caret-position="678">
+              <caret line="67" column="64" lean-forward="true" selection-start-line="67" selection-start-column="64" selection-end-line="67" selection-end-column="64" />
               <folding>
                 <element signature="n#style#0;n#div#0;n#template#0;n#!!top" expanded="true" />
               </folding>
@@ -122,8 +119,8 @@
       <file leaf-file-name="functionality-list.js" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/store/modules/functionality-list.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="153">
-              <caret line="9" column="26" selection-start-line="9" selection-start-column="26" selection-end-line="9" selection-end-column="26" />
+            <state relative-caret-position="323">
+              <caret line="19" column="3" lean-forward="true" selection-start-line="19" selection-start-column="3" selection-end-line="19" selection-end-column="3" />
             </state>
           </provider>
         </entry>
@@ -171,15 +168,15 @@
         <option value="$PROJECT_DIR$/src/components/DesignBuilder.vue" />
         <option value="$PROJECT_DIR$/src/index.js" />
         <option value="$PROJECT_DIR$/src/components/Functionality.vue" />
-        <option value="$PROJECT_DIR$/src/store/modules/functionality-list.js" />
         <option value="$PROJECT_DIR$/src/components/App.vue" />
-        <option value="$PROJECT_DIR$/src/components/AnomalyDetection.vue" />
         <option value="$PROJECT_DIR$/src/store/index.js" />
         <option value="$PROJECT_DIR$/src/components/DataLoader.vue" />
-        <option value="$PROJECT_DIR$/src/store/modules/anomaly-problem.js" />
         <option value="$PROJECT_DIR$/src/index.html" />
         <option value="$PROJECT_DIR$/src/store/modules/anomaly-plot.js" />
+        <option value="$PROJECT_DIR$/src/store/modules/functionality-list.js" />
         <option value="$PROJECT_DIR$/src/components/AnomalyPlot.vue" />
+        <option value="$PROJECT_DIR$/src/components/AnomalyDetection.vue" />
+        <option value="$PROJECT_DIR$/src/store/modules/anomaly-problem.js" />
       </list>
     </option>
   </component>
@@ -195,16 +192,15 @@
     <handled-path value="$PROJECT_DIR$/node_modules" />
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="1913" />
-    <option name="width" value="974" />
-    <option name="height" value="1047" />
+    <option name="x" value="2391" />
+    <option name="width" value="1218" />
+    <option name="height" value="1309" />
   </component>
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -252,10 +248,11 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
-    <property name="SearchEverywhereHistoryKey" value="vuex&#9;FILE&#9;file://C:/Users/carlo/Documents/GitHub/daphne-interface/node_modules/vuex&#10;getElementById &#9;null&#9;null&#10;index&#9;null&#9;null" />
+    <property name="SearchEverywhereHistoryKey" value="updateA&#9;null&#9;null&#10;vuex&#9;FILE&#9;file://C:/Users/carlo/Documents/GitHub/daphne-interface/node_modules/vuex&#10;getElementById &#9;null&#9;null&#10;index&#9;null&#9;null" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$/../learn-vuex" />
     <property name="node.js.detected.package.eslint" value="true" />
@@ -311,12 +308,13 @@
       <workItem from="1523968933077" duration="47862000" />
       <workItem from="1524146009589" duration="41306000" />
       <workItem from="1524412870880" duration="14721000" />
-      <workItem from="1524576622870" duration="15893000" />
+      <workItem from="1524576622870" duration="17348000" />
+      <workItem from="1524663735459" duration="5726000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="140885000" />
+    <option name="totallyTimeSpent" value="148066000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -331,11 +329,11 @@
     <frame x="1912" y="-8" width="1936" height="1056" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.19599578" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.12170706" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.32905984" />
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Event Log" order="10" side_tool="true" />
-      <window_info anchor="bottom" id="Run" order="2" visible="true" weight="0.32668883" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" visible="true" weight="0.32668883" />
       <window_info anchor="bottom" id="Version Control" order="9" weight="0.33333334" />
       <window_info id="npm" order="2" side_tool="true" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.24983476" />
@@ -364,6 +362,13 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/components/AnomalyPlot.vue">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="595">
+          <caret line="35" column="40" lean-forward="true" selection-start-line="35" selection-start-column="40" selection-end-line="35" selection-end-column="40" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/components/App.vue">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1139">
@@ -487,9 +492,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/scripts/eoss-filter.js">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/styles/app.scss">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1394">
@@ -607,51 +609,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/store/modules/functionality-list.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="153">
-          <caret line="9" column="26" selection-start-line="9" selection-start-column="26" selection-end-line="9" selection-end-column="26" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/store/modules/anomaly-problem.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="408">
-          <caret line="99" column="5" selection-start-line="99" selection-start-column="5" selection-end-line="99" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/store/modules/tradespace-plot.js">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="374">
-          <caret line="22" column="19" lean-forward="true" selection-start-line="22" selection-start-column="19" selection-end-line="22" selection-end-column="19" />
-          <folding>
-            <element signature="n#!!doc" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$APPLICATION_HOME_DIR$/plugins/JavaScriptLanguage/jsLanguageServicesImpl/external/lib.dom.d.ts">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="126">
           <caret line="13704" column="4" selection-start-line="13704" selection-start-column="4" selection-end-line="13704" selection-end-column="4" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/components/AnomalyDetection.vue">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="102">
-          <caret line="6" column="25" selection-start-line="6" selection-start-column="25" selection-end-line="6" selection-end-column="25" />
-          <folding>
-            <element signature="n#style#0;n#div#0;n#template#0;n#!!top" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/index.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="7" lean-forward="true" selection-start-line="15" selection-start-column="7" selection-end-line="15" selection-end-column="7" />
         </state>
       </provider>
     </entry>
@@ -680,20 +641,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/components/TradespacePlot.vue">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="367">
-          <caret line="162" column="49" selection-start-line="162" selection-start-column="49" selection-end-line="162" selection-end-column="49" />
-          <folding>
-            <element signature="e#2880#2928#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/components/Functionality.vue">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="646">
-          <caret line="65" column="32" lean-forward="true" selection-start-line="65" selection-start-column="32" selection-end-line="65" selection-end-column="32" />
+        <state relative-caret-position="1003">
+          <caret line="65" column="32" selection-start-line="65" selection-start-column="32" selection-end-line="65" selection-end-column="32" />
           <folding>
             <element signature="e#994#1032#0" expanded="true" />
             <element signature="e#1304#1354#0" expanded="true" />
@@ -701,19 +652,67 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/store/modules/anomaly-plot.js">
+    <entry file="file://$PROJECT_DIR$/src/store/modules/functionality-list.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="321">
-          <caret line="39" column="20" selection-start-line="39" selection-start-column="4" selection-end-line="39" selection-end-column="20" />
+        <state relative-caret-position="323">
+          <caret line="19" column="3" lean-forward="true" selection-start-line="19" selection-start-column="3" selection-end-line="19" selection-end-column="3" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/components/TradespacePlot.vue">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="17">
+          <caret line="162" column="49" selection-start-line="162" selection-start-column="49" selection-end-line="162" selection-end-column="49" />
+          <folding>
+            <element signature="e#2880#2928#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/index.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="255">
+          <caret line="15" column="7" selection-start-line="15" selection-start-column="7" selection-end-line="15" selection-end-column="7" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/components/AnomalyDetection.vue">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="678">
+          <caret line="67" column="64" lean-forward="true" selection-start-line="67" selection-start-column="64" selection-end-line="67" selection-end-column="64" />
+          <folding>
+            <element signature="n#style#0;n#div#0;n#template#0;n#!!top" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/components/AnomalyPlot.vue">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="231">
-          <caret line="156" column="64" lean-forward="true" selection-start-line="156" selection-start-column="64" selection-end-line="156" selection-end-column="64" />
+        <state relative-caret-position="-323">
+          <caret line="488" column="21" lean-forward="true" selection-start-line="488" selection-start-column="21" selection-end-line="488" selection-end-column="21" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/store/modules/anomaly-plot.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="112">
+          <caret line="27" column="2" lean-forward="true" selection-start-line="27" selection-start-column="2" selection-end-line="27" selection-end-column="2" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/store/modules/anomaly-problem.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="459">
+          <caret line="171" lean-forward="true" selection-start-line="171" selection-end-line="171" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/store/modules/tradespace-plot.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2040">
+          <caret line="21" column="25" lean-forward="true" selection-start-line="21" selection-start-column="25" selection-end-line="21" selection-end-column="25" />
           <folding>
-            <element signature="e#3398#3446#0" expanded="true" />
+            <element signature="n#!!doc" expanded="true" />
           </folding>
         </state>
       </provider>

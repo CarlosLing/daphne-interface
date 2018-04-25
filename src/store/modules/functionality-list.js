@@ -13,8 +13,9 @@ functionalityTypes.set('AnomalyDetection', {
         // Here we will be listing all the methods implemented
         // Algorithms parameters are defined in algorithmsInfo in 'anomaly-problem'
         {name: "", value: ""},
-        {name: "Windowed Statistic Method", value: "ADWindowedStats"},
-        {name: "Seasonal ARIMA + Exogenous Variables", value: "SARIMAX_AD"}
+        {name: "UniVariate: Windowed Statistic Method", value: "ADWindowedStats"},
+        {name: "UniVariate: Seasonal ARIMA + Exogenous Variables", value: "SARIMAX_AD"},
+        {name: "Multivariate: Adaptive Kernel Density Based", value: "adaptiveKNN"}
     ]
 });
 

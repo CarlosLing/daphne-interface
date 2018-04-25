@@ -3,7 +3,8 @@
         <div class="panel-block">
             <div class="select is-fullwidth">
                 <select v-on:change="selectVariable" v-model="selectedVariable">
-                    <option v-for="option in variableList" v-bind:value="option" v-bind:key="option">{{ option }}</option>
+                    <option v-for="option in variableList" v-bind:value="option"
+                            v-bind:key="option" >{{option}}</option>
                 </select>
             </div>
         </div>
@@ -64,9 +65,9 @@
                 this.$store.commit("updateVariableChosen", this.selectedVariable)
             },
             runAlgorithm(){
-                this.$store.commit('updateAlgorithmParameters', this.algorithmsParameters)
-                this.$store.dispatch('detectAnomalies', this.selectedAlgorithm)
-                this.$store.commit('updateChosenAlgorithm', this.getAlgorithmName(this.selectedAlgorithm))
+                this.$store.commit('updateAlgorithmParameters', this.algorithmsParameters);
+                this.$store.commit('updateNameChosenAlgorithm', this.getAlgorithmName(this.selectedAlgorithm));
+                this.$store.dispatch('detectAnomalies', this.selectedAlgorithm);
             }
         }
     }

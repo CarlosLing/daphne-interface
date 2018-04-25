@@ -85,7 +85,6 @@
         data() {
             return {
                 plotOverlap:  false,
-                anomalyScoreName: "occupancy_t4013",
                 mainPlotParams: {
                     margin: {top: 20, right: 30, bottom: 30, left: 90},
                     width: 960,
@@ -105,6 +104,7 @@
             ...mapGetters({
                 // Todo add getter and a watch in order to keep track of the tab chosen
                 activePlotTab: 'getActivePlotTab',
+                anomalyScoreName: "getAnomalyScoreName",
                 anomalyProblemData: 'getAnomalyProblemData',
                 currentDetectedAnomalies: 'getCurrentDetectedAnomalies',
                 variableChosen: 'getVariableChosen',
@@ -262,7 +262,6 @@
                     .text("TimeStamp");
 
                 // Chooses the axis to show depending on the selected plot
-                // TODO: implement the possibility of having both plots at the same time
                 if (this.activePlotTab === "oneVariable" || this.plotOverlap) {
                     // y-axis
                     let gY = svg.append('g')

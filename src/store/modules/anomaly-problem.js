@@ -5,16 +5,17 @@ let algorithmsInfo= new Map();
 // Note that new algorithms must be included in the Option list of Anomaly Detection in './functionality-list.js'
 algorithmsInfo.set('ADWindowedStats', {
     name: "Windowed Statistic Method",
+    type: "UniVariate",
     parameters:[
         {name: "Window Parameter", variable: "w", defaultValue: 100, value: 100, varType:"int",
             description: "Fixes the number of observations before the data to be analyzed. \nA higher number implies the anomaly detected is an outlier in a more general context, while a smaller number will imply that the anomaly is local"},
         {name: "Threshold in STD", variable: "tstd", defaultValue: 3, value: 3, varType:"float",
-            description: "Fixes the degree of confidence with which we classify the data as an anomaly. A higher threshold means we are detecting extremer outliers"}],
-    multiVariate: false
+            description: "Fixes the degree of confidence with which we classify the data as an anomaly. A higher threshold means we are detecting extremer outliers"}]
 });
 
 algorithmsInfo.set('SARIMAX_AD', {
     name: "Seasonal ARIMA + Exogenous Variables",
+    type: "UniVariate",
     parameters:[
         {name: "Seasonality", variable: "seasonality", defaultValue: 24, value: 24, varType:"int",
             description: "Indicates the seasonality assumed for the data. This means that the data is considered " +
@@ -31,9 +32,25 @@ algorithmsInfo.set('SARIMAX_AD', {
             varType: "int", description: "Fixes the range of the parameters p and q of the ARIMA model. A higher " +
             "number results on exponentially more calculation time, and might no significantly improve the prediction" +
             "results for anomaly detection. It is recommended not to exceed the default value"}
-    ],
-    multiVariate: true
+    ]
 });
+
+algorithmsInfo.set('adaptiveKNN', {
+    name: 'Adaptive Kernel Density Based',
+    type: "MultiVariate",
+    parameters: [
+        {name: "Number of Nearest Neighbors", variable: "k", defaultValue: 10, value: 10, varType: "int",
+            description: "Data points considered to compute Kernel Radius."},
+        {name: "Overall Smoothing parameter", variable: "c", defaultValue: 0.7, value: 0.7, varType: "float",
+            description: "Smoothing parameter, values recommended between 0.5 and 1"},
+        {name: "Sampling parameters", variable: "sp", defaultValue: 1, value: 1, varType: "float",
+            description: "Represents the fraction of the data sampled to be used in the training sample, in big " +
+            "dataSets this parameter is recommended to be set to small values. It must be between 0 and 1"}
+    ]
+});
+
+// Defines the Name given to the anomaly score name from the algorithms output
+let anomalyScoreName = "anomalyScore";
 
 const state = {
 
@@ -44,7 +61,7 @@ const state = {
 
     // Algorithms for which an API was implemented
     methodsAPI: ["ADWindowedStats"],
-    methodsWS: ["SARIMAX_AD"],
+    methodsWS: ["SARIMAX_AD", "adaptiveKNN"],
 
     algorithmParameters: [],
     chosenAlgorithm: "None",
@@ -55,6 +72,10 @@ const state = {
 const getters = {
     getAnomalyProblemData(state) {
         return state.anomalyProblemData;
+    },
+
+    getAnomalyScoreName() {
+        return anomalyScoreName;
     },
 
     getAnomalyVariables(state) {
@@ -79,6 +100,10 @@ const getters = {
 
     getAlgorithmName: (state) => (Algorithm) => {
         return algorithmsInfo.get(Algorithm).name
+    },
+
+    isAlgorithmMultiVariate: (state) => (Algorithm) => {
+        return algorithmsInfo.get(Algorithm).type === "MultiVariate"
     },
 
     getAlgorithmParameters: (state) => (Algorithm) => {
@@ -127,8 +152,13 @@ const actions = {
                         // TODO: Implement this to show it on the web
                     }
                     else {
-                        commit("addDetectedAnomalies", data);
-                        commit("updateCurrentDetectedAnomalies", data);
+                        if(getters.isAlgorithmMultiVariate(Method)){
+                            commit("updateAnomalyData", JSON.parse(data))
+                        }
+                        else {
+                            commit("addDetectedAnomalies", data);
+                            commit("updateCurrentDetectedAnomalies", data);
+                        }
                     }
                 }
                 else {
@@ -160,8 +190,13 @@ const actions = {
                             // TODO: Implement this to show it on the web
                         }
                         else {
-                            commit("addDetectedAnomalies", data);
-                            commit("updateCurrentDetectedAnomalies", data);
+                            if(getters.isAlgorithmMultiVariate(Method)){
+                                commit("updateAnomalyData", JSON.parse(data))
+                            }
+                            else {
+                                commit("addDetectedAnomalies", data);
+                                commit("updateCurrentDetectedAnomalies", data);
+                            }
                         }
                     };
                     store.commit('setWebsocketAD', websocket);
@@ -169,8 +204,6 @@ const actions = {
                 });
 
                 websocketPromise.then(() => {
-                    console.log(JSON.stringify(reqData));// todo websocket does not recieve JSON
-
                     state.websocketAD.send(JSON.stringify(reqData));
                 });
             }
@@ -262,8 +295,8 @@ const mutations = {
         state.algorithmParameters = algorithmParameters
     },
 
-    updateChosenAlgorithm(state, newChosenAlgorithm) {
-        state.chosenAlgorithm = newChosenAlgorithm
+    updateNameChosenAlgorithm(state, newChosenAlgorithmName) {
+        state.chosenAlgorithm = newChosenAlgorithmName
     },
 
     setWebsocketAD(state,websocket) {
