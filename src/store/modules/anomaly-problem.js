@@ -49,6 +49,19 @@ algorithmsInfo.set('adaptiveKNN', {
     ]
 });
 
+algorithmsInfo.set('iForest', {
+    name: 'Isolation Forest',
+    type: "MultiVariate",
+    parameters: [
+        {name: "Number of Trees", variable: "t", defaultValue: 20, value: 20, varType: "int",
+            description: "Number of trees computed to set the isolation forest"},
+        {name: "Sampling parameter", variable: "sp", defaultValue: 0.1, value: 0.1, varType: "float",
+            description: "Represents the fraction of the data sampled to be used in each tree, it is recommended " +
+            "to be set to a value that make the number of data available for each tree around 150 samples. " +
+            "It must be between 0 and 1"}
+    ]
+});
+
 // Defines the Name given to the anomaly score name from the algorithms output
 let anomalyScoreName = "anomalyScore";
 
@@ -58,10 +71,11 @@ const state = {
     anomalyVariables: [],
     allDetectedAnomalies: [],
     variableChosen: [],
+    isRunning: false,
 
     // Algorithms for which an API was implemented
     methodsAPI: ["ADWindowedStats"],
-    methodsWS: ["SARIMAX_AD", "adaptiveKNN"],
+    methodsWS: ["SARIMAX_AD", "adaptiveKNN", "iForest"],
 
     algorithmParameters: [],
     chosenAlgorithm: "None",
@@ -76,6 +90,10 @@ const getters = {
 
     getAnomalyScoreName() {
         return anomalyScoreName;
+    },
+
+    getIsRunning(state){
+        return state.isRunning;
     },
 
     getAnomalyVariables(state) {
@@ -115,6 +133,8 @@ const actions = {
 
     async detectAnomalies({state, getters, commit}, Method) {
         try {
+            commit("updateIsRunning", true);
+
             // Adds the data
             let reqData = {data: JSON.stringify(getters.getAnomalyProblemData)};
 
@@ -152,6 +172,7 @@ const actions = {
                         // TODO: Implement this to show it on the web
                     }
                     else {
+                        commit("updateIsRunning", false);
                         if(getters.isAlgorithmMultiVariate(Method)){
                             commit("updateAnomalyData", JSON.parse(data))
                         }
@@ -190,6 +211,7 @@ const actions = {
                             // TODO: Implement this to show it on the web
                         }
                         else {
+                            commit("updateIsRunning", false);
                             if(getters.isAlgorithmMultiVariate(Method)){
                                 commit("updateAnomalyData", JSON.parse(data))
                             }
@@ -275,6 +297,10 @@ const actions = {
 };
 
 const mutations = {
+    updateIsRunning(state, newState){
+        state.isRunning = newState;
+    },
+
     updateAnomalyData(state, anomalyData) {
         state.anomalyProblemData = anomalyData
     },

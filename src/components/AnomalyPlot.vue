@@ -9,10 +9,12 @@
             <div>
                 <div class="tabs is centered" id="plot-tabs">
                     <ul>
-                        <li id="tab_oneVariable" class="is-active" v-on:click="selectTabOption('oneVariable')">
+                        <li id="tab_oneVariable" v-on:click="selectTabOption('oneVariable')"
+                            v-bind:class="{'is-active': (activePlotTab==='oneVariable')}">
                             <a><span>Time series</span></a>
                         </li>
-                        <li id="tab_multiVariable" v-on:click="selectTabOption('multiVariable')">
+                        <li id="tab_multiVariable" v-on:click="selectTabOption('multiVariable')"
+                            v-bind:class="{'is-active': (activePlotTab==='multiVariable')}">
                             <a><span>MultiVariate</span></a>
                         </li>
                     </ul>
@@ -152,10 +154,8 @@
             ]),
 
             selectTabOption(option) {
-                $("#tab_" + this.activePlotTab).removeClass("is-active");
                 this.$store.commit("updateActivePlotTab", option);
                 this.updatePlot('timestamp', this.variableChosen);
-                $("#tab_" + option).addClass("is-active");
             },
 
             resetMainPlot() {
@@ -206,7 +206,7 @@
                     .style('height', this.mainPlotParams.height + 'px');
 
                 this.zoom = d3.zoom()
-                    .scaleExtent([0.4, 25])
+                    .scaleExtent([0.9, 25])
                     .on('zoom', d => {
                         this.transform = d3.event.transform;
                         gX.call(xAxis.scale(this.transform.rescaleX(xScale)));

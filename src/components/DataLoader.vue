@@ -11,7 +11,7 @@
         </div>
         <div class="panel-block"><b>...Or Upload your Data here</b></div>
         <div class="panel-block functionality">
-            <!--Todo implement functionality to load data sets-->
+            <p>(Remember to include a column called "timestamp" which contains the time information)</p>
             <div class="content">
                 <div class="file is-large">
                     <label class="file-label">

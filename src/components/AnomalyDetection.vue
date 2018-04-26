@@ -1,6 +1,7 @@
 <template>
     <div style="display: flex; flex-direction: column; flex-grow: 1; overflow: auto;">
         <div class="panel-block">
+            <div><b>Select Variable:</b></div>
             <div class="select is-fullwidth">
                 <select v-on:change="selectVariable" v-model="selectedVariable">
                     <option v-for="option in variableList" v-bind:value="option"
@@ -14,7 +15,7 @@
                     <option v-for="option in algorithmOptions" v-bind:value="option.value" v-bind:key="option.value">{{ option.name }}</option>
                 </select>
             </div>
-            <button class="button" id="apply-ADAlgorithm-button" @click="runAlgorithm">Apply Anomaly Detection</button>
+            <button class="button" id="apply-ADAlgorithm-button" @click="runAlgorithm" v-bind:class="{ 'is-loading': isLoading }">Apply Anomaly Detection</button>
         </div>
         <div class="panel-block functionality">
             <div class="content">
@@ -48,6 +49,7 @@
         props: ['name'],
         computed: {
             ...mapGetters({
+                isLoading: "getIsRunning",
                 getAlgorithmName: "getAlgorithmName",
                 getAlgorithmParameters: "getAlgorithmParameters",
                 variableList: "getAnomalyVariables"

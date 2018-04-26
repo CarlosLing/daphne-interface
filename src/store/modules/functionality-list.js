@@ -15,7 +15,8 @@ functionalityTypes.set('AnomalyDetection', {
         {name: "", value: ""},
         {name: "UniVariate: Windowed Statistic Method", value: "ADWindowedStats"},
         {name: "UniVariate: Seasonal ARIMA + Exogenous Variables", value: "SARIMAX_AD"},
-        {name: "Multivariate: Adaptive Kernel Density Based", value: "adaptiveKNN"}
+        {name: "Multivariate: Adaptive Kernel Density Based", value: "adaptiveKNN"},
+        {name: "Multivariate: Isolation Forest", value: "iForest"}
     ]
 });
 
