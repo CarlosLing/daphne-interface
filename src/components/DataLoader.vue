@@ -28,6 +28,12 @@
                 </div>
             </div>
         </div>
+        <div class="panel-block"><b>Loaded data: </b>
+            <div v-if="!isDataLoaded">No Data is loaded yet</div>
+            <div v-else>
+                {{loadedData}}
+            </div>
+        </div>
     </div>
 </template>
 
@@ -37,8 +43,9 @@
 
         data() {
             return {
+                isDataLoaded: false,
                 selectedDataSet: '',
-                fileInput: '',
+                loadedData: '',
                 options: {
                     url: '/data'
                 }
@@ -54,12 +61,15 @@
 
         methods:{
             loadData(){
-                this.$store.dispatch('loadAnomalyData', this.selectedDataSet)
+                this.$store.dispatch('loadAnomalyData', this.selectedDataSet);
+                this.loadedData = this.selectedDataSet + "(Sample data)"; // todo this logic must be into the store
+                this.isDataLoaded = true;
             },
             onFileChange() {
                 let  fileField = document.querySelector("input[type='file']");
-
                 this.$store.dispatch('loadAnomalyDataFromFile', fileField.files[0]);
+                this.isDataLoaded = true;
+                this.loadedData = fileField.files[0]['name'] + "(Uploaded)";
 
                 // let files = e.target.files || e.dataTransfer.files;
                 // console.log(files[0]);
