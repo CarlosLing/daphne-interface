@@ -10,7 +10,12 @@ algorithmsInfo.set('ADWindowedStats', {
         {name: "Window Parameter", variable: "w", defaultValue: 100, value: 100, varType:"int",
             description: "Fixes the number of observations before the data to be analyzed. \nA higher number implies the anomaly detected is an outlier in a more general context, while a smaller number will imply that the anomaly is local"},
         {name: "Threshold in STD", variable: "tstd", defaultValue: 3, value: 3, varType:"float",
-            description: "Fixes the degree of confidence with which we classify the data as an anomaly. A higher threshold means we are detecting extremer outliers"}]
+            description: "Fixes the degree of confidence with which we classify the data as an anomaly. A higher threshold means we are detecting extremer outliers"}],
+    characteristics: [
+        {description: "Target: the main target of this method is the detection of values which represent an outlier of the w previous methods"},
+        {description: "Time consuming: The method is lightweight, for each data point a "}
+
+    ]
 });
 
 algorithmsInfo.set('SARIMAX_AD', {
@@ -69,6 +74,7 @@ const state = {
 
     anomalyProblemData: [],
     anomalyVariables: [],
+    anomalyVariablesCorrelation: [],
     allDetectedAnomalies: [],
     variableChosen: [],
     isRunning: false,
@@ -94,6 +100,10 @@ const getters = {
 
     getIsRunning(state){
         return state.isRunning;
+    },
+
+    getAnomalyVariablesCorrelation(state){ // Todo Implement correlation functionality
+        return state.anomalyVariablesCorrelation
     },
 
     getAnomalyVariables(state) {
@@ -205,7 +215,6 @@ const actions = {
                     websocket.onmessage = function (message) {
                         console.log(message);
                         let data = JSON.parse(message.data);
-                        console.log(data);
                         if (data.includes('error')) {
                             console.error('Internal Algorithm error: ' + data['error']);
                             // TODO: Implement this to show it on the web
@@ -254,6 +263,7 @@ const actions = {
                 let data = await dataResponse.json();
                 commit('updateAnomalyData', data['data']);
                 commit('updateAnomalyVariables', data['variables']);
+                commit('updateAnomalyVariablesCorrelation', data['correlation']);
             }
             else{
                 console.error('Error accessing the data');
@@ -284,6 +294,7 @@ const actions = {
                 let data = await dataResponse.json();
                 commit('updateAnomalyData', data['data']);
                 commit('updateAnomalyVariables', data['variables']);
+                commit('updateAnomalyVariablesCorrelation', data['correlation']);
             }
             else{
                 console.error('Error accessing the data');
@@ -307,6 +318,10 @@ const mutations = {
 
     updateAnomalyVariables(state, anomalyVariables) {
         state.anomalyVariables = anomalyVariables
+    },
+
+    updateAnomalyVariablesCorrelation(state, correlations){
+        state.anomalyVariablesCorrelation = correlations
     },
 
     addDetectedAnomalies(state, newAnomalies) {

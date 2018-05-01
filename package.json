@@ -5,6 +5,7 @@
   "main": "dist/index.html",
   "scripts": {
     "dev": "webpack-dev-server --inline --config webpack.dev.js",
+    "dev:prod": "webpack-dev-server --inline --config webpack.prod.js",
     "build": "webpack --display-optimization-bailout --config webpack.dev.js",
     "build:prod": "webpack --display-optimization-bailout --config webpack.prod.js",
     "watch": "webpack --watch --display-optimization-bailout --config webpack.dev.js",

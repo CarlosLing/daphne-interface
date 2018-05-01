@@ -11,7 +11,7 @@
                     <ul>
                         <li id="tab_oneVariable" v-on:click="selectTabOption('oneVariable')"
                             v-bind:class="{'is-active': (activePlotTab==='oneVariable')}">
-                            <a><span>Time series</span></a>
+                            <a><span>UniVariate</span></a>
                         </li>
                         <li id="tab_multiVariable" v-on:click="selectTabOption('multiVariable')"
                             v-bind:class="{'is-active': (activePlotTab==='multiVariable')}">
@@ -51,14 +51,28 @@
                                     <input type="radio" name="mouse-selection" value="de-select" v-model="selectionMode" />
                                 </label>
                             </div>
+                            <div class="tooltip">
+                                <label class="radio">
+                                    Overlap both plots
+                                    <input type="checkbox" v-model="plotOverlap">
+                                </label>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
-                        <div class="tooltip">
-                            <label class="checkbox">
-                                <input type="checkbox" v-model="plotOverlap">
-                                Overlap both plots
-                            </label>
+                        <div class="card-content is-small">
+                            <div class="field">
+                                <p>
+                                   Clicked Data Point:
+                                </p>
+                                <div v-if="clickedData.timestamp">
+                                    <p>{{variableChosen}}: {{clickedData[variableChosen]}}</p>
+                                    <p>Time: {{clickedData.timestamp}}</p>
+                                </div>
+                                <div v-else>
+                                    <p>No Clicked data</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="card">
@@ -88,7 +102,7 @@
             return {
                 plotOverlap:  false,
                 mainPlotParams: {
-                    margin: {top: 20, right: 30, bottom: 30, left: 90},
+                    margin: {top: 20, right: 60, bottom: 30, left: 60},
                     width: 960,
                     height: 450,
                     scale: 1
@@ -98,19 +112,25 @@
                 xMap: {},
                 yMap: {},
                 yAnomalyScoreMap: {},
-                context: {},
-                hiddenContext: {}
+                context: {}
+                // hiddenContext: {}  Hidden context is not necessary here, as is not
             }
         },
         computed: {
             ...mapGetters({
-                // Todo add getter and a watch in order to keep track of the tab chosen
                 activePlotTab: 'getActivePlotTab',
                 anomalyScoreName: "getAnomalyScoreName",
                 anomalyProblemData: 'getAnomalyProblemData',
                 currentDetectedAnomalies: 'getCurrentDetectedAnomalies',
                 variableChosen: 'getVariableChosen',
                 colorAnomalyPlot: 'getColorAnomalyPlot',
+                activeMouseInterval: 'getActiveMouseInterval',
+                hoveredData: 'getHoveredData',
+                clickedData: 'getClickedData',
+                selectedData: 'getSelectedData',
+                preMappedX: 'getPreMappedX',
+
+
                 plotData: 'getPlotData',
                 colorMap: 'getColorMap',
                 hoveredArch: 'getHoveredArch',
@@ -150,7 +170,8 @@
         methods: {
             ...mapMutations([
                 'updateClickedArch',
-                'updateHoveredArch',
+                'updateHoveredData',
+                'updateActiveMouseInterval'
             ]),
 
             selectTabOption(option) {
@@ -184,6 +205,8 @@
                 xScale.domain(d3.extent(this.anomalyProblemData, xValue));
                 this.xMap = d => xScale(xValue(d)); // data -> display
                 let xAxis = d3.axisBottom(xScale);
+                this.$store.commit('calculatePreMappedX', this.xMap);
+                // Creates an inverse of the map function to be used in the selection and feedback problems
 
                 // setup y
                 let yValue = d => d[yIndex]; // data -> value
@@ -234,17 +257,6 @@
                     .call(this.zoom);
 
                 this.context = canvas.node().getContext('2d');
-
-                let hiddenCanvas = d3.select('#main-plot')
-                    .append('canvas')
-                    .style('position', 'absolute')
-                    .style('top', margin.top + 'px')
-                    .style('left', margin.left + 'px')
-                    .style('display', 'none')
-                    .attr('width', this.plotWidth)
-                    .attr('height', this.plotHeight);
-
-                this.hiddenContext = hiddenCanvas.node().getContext('2d');
 
                 // x-axis
                 let gX = svg.append('g')
@@ -311,11 +323,14 @@
                 // Canvas interaction
                 let self = this;
 
+                // Graphic must provide feedback on hovered items
                 canvas.on('mousemove.inspection', function() { self.canvasMousemove(); });
+
+                // Might be interesting to allow to select points in and show their degrees of anomaly
                 canvas.on('click.inspection', function() { self.canvasClick(); });
             },
 
-            drawAnomalies(context){
+            drawAnomalies(context) { // todo change the name of the function
 
                 context.clearRect(0, 0, this.plotWidth, this.plotHeight);
                 context.save();
@@ -323,29 +338,77 @@
                 // Draw the data
                 let x0 = this.transform.applyX(this.xMap(this.anomalyProblemData[0]));
                 let y0 = this.yMap(this.anomalyProblemData[0]);
+                let [mouseX0, mouseX1] = this.activeMouseInterval;
+                let spottedMouseData = false;
                 context.strokeStyle = this.colorAnomalyPlot.oneVariableStroke;
                 context.beginPath();
-                context.moveTo(x0,y0);
-                this.anomalyProblemData.forEach((point) => {
-                    let tx = this.transform.applyX(this.xMap(point));
+                context.moveTo(x0, y0);
+                this.anomalyProblemData.forEach((point, index) => { // as it finds the data near the mouse saves it to print after a rectangle centered in this loaction, must save both, y
+                    let tx = this.transform.applyX(this.preMappedX[index]);
                     let ty = this.yMap(point);
                     context.lineTo(tx, ty);
+                    if (!spottedMouseData && mouseX0 <= tx && tx <= mouseX1) {
+                        spottedMouseData = true;
+                        this.updateHoveredData(point);
+                    }
                 });
                 context.stroke();
+
+
+                context.fillStyle = this.colorAnomalyPlot.selectedData;
+                this.anomalyProblemData.forEach((point, index) => {
+                    if (this.selectedData[index]){
+                        let tx = this.transform.applyX(this.preMappedX[index]);
+                        let ty = this.yMap(point);
+                        context.beginPath();
+                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
+                        context.fill();
+                    }
+                });
+
+                // Todo might be interesting to add a button to disable vertical line
 
                 // Draw the anomaly score
                 let y0AS = this.yAnomalyScoreMap(this.anomalyProblemData[0]);
                 context.strokeStyle = this.colorAnomalyPlot.multiVariableStroke;
                 context.beginPath();
-                context.moveTo(x0,y0AS);
-                this.anomalyProblemData.forEach((point) => {
-                    let tx = this.transform.applyX(this.xMap(point));
+                context.moveTo(x0, y0AS);
+                this.anomalyProblemData.forEach((point, index) => {
+                    let tx = this.transform.applyX(this.preMappedX[index]);
                     let ty = this.yAnomalyScoreMap(point);
                     context.lineTo(tx, ty);
                 });
                 context.stroke();
+                // TODO do this more modular
+                // Print feedback on the hovering
+                // Prints the points
+                let x = this.transform.applyX(this.xMap(this.hoveredData));
+                let y1 = this.yMap(this.hoveredData);
+                let y2 = this.yAnomalyScoreMap(this.hoveredData);
+                if (spottedMouseData) {
+                    context.fillStyle = this.colorAnomalyPlot.oneVariableStroke;
+                    context.fillRect(x - 4, y1 - 4, 8, 8);
+                    context.fillStyle = this.colorAnomalyPlot.multiVariableStroke;
+                    context.fillRect(x - 4, y2 - 4, 8, 8);
+                }
+                // Prints the line
+                context.strokeStyle = this.colorAnomalyPlot.indicatorStroke;
+                context.beginPath();
+                context.moveTo(x,0);
+                context.lineTo(x,(this.mainPlotParams.height));
+                context.stroke();
 
-                // Drw the anomaly points
+                if(this.clickedData.timestamp){ // Check a better way to do this
+                    let x = this.transform.applyX(this.xMap(this.clickedData));
+                    context.strokeStyle = this.colorAnomalyPlot.clickedData;
+                    context.beginPath();
+                    context.moveTo(x,0);
+                    context.lineTo(x,(this.mainPlotParams.height));
+                    context.stroke();
+                }
+
+
+                // Draw the anomaly points
                 context.fillStyle = this.colorAnomalyPlot.oneVariableAnomaly;
                 this.currentDetectedAnomalies.forEach((point) =>{
                     let tx = this.transform.applyX(this.xMap(point));
@@ -382,71 +445,20 @@
                 context.restore();
             },
 
-            getPointUnderMouse() {
-                // Draw the hidden canvas.
-                this.drawPoints(this.hiddenContext, true);
-
-                // Get mouse positions from the main canvas.
+            getMouseXCoordenate(){
+                // Gets the mouse x position on the graph
                 let mousePos = d3.mouse(d3.select('#main-plot').select('canvas').node());
-                let mouseX = mousePos[0];
-                let mouseY = mousePos[1];
-
-                // Pick the colour from the mouse position and max-pool it.
-                let color = this.hiddenContext.getImageData(mouseX-3, mouseY-3, 6, 6).data;
-                let colorList = {};
-                for (let i = 0; i < color.length; i += 4) {
-                    let colorRgb = 'rgb(' + color[i] + ',' + color[i+1] + ',' + color[i+2] + ')';
-                    if (colorRgb in colorList) {
-                        colorList[colorRgb] += 1;
-                    }
-                    else {
-                        colorList[colorRgb] = 1;
-                    }
-                }
-                let maxcolor = -1;
-                let maxcolor_num = 0;
-                for (let key in colorList) {
-                    if (maxcolor_num < colorList[key]) {
-                        maxcolor_num = colorList[key];
-                        maxcolor = key;
-                    }
-                }
-                if (maxcolor === 0) {
-                    maxcolor = -1;
-                }
-                return maxcolor;
+                return mousePos[0];
             },
 
             canvasMousemove() {
-                let pointColor = this.getPointUnderMouse();
-
-                // Get the data from our map!
-                if (pointColor in this.colorMap) {
-                    let point = this.colorMap[pointColor];
-                    // Only update if there is a change in the selection
-                    if (this.hoveredArch !== point) {
-                        this.updateHoveredArch(point);
-                    }
-                }
-                else {
-                    // In case nothing is selected just revert everything back to normal
-                    if (this.hoveredArch !== -1) {
-                        this.updateHoveredArch(-1);
-                    }
-                }
+                // Gets the timestamp of the mouse
+                let xMouseCoord = this.getMouseXCoordenate();
+                this.updateActiveMouseInterval(xMouseCoord);
             },
 
             canvasClick() {
-                let pointColor = this.getPointUnderMouse();
-
-                // Get the data from our map!
-                if (pointColor in this.colorMap) {
-                    let point = this.colorMap[pointColor];
-                    // Only update if there is a change in the selection
-                    if (this.clickedArch !== point) {
-                        this.updateClickedArch(point);
-                    }
-                }
+                this.$store.commit('setClickedData')
             },
 
             /*
@@ -454,11 +466,12 @@
                @param option: option to remove all selections and highlights or remove only highlights
             */
             cancelSelection() {
-                // Remove both highlights and selections
-                this.$store.commit('clearSelectedArchs');
-                this.$store.commit('clearHighlightedArchs');
+                // Remove both clicked and selections
+                this.$store.commit('clearSelectedData');
+                this.$store.commit('clearClickedData');
             },
 
+            // Check function
             async updateTargetSelection() {
                 let selectedIds = [];
                 let nonSelectedIds = [];
@@ -498,8 +511,8 @@
         },
 
         watch: {
-            problemData: function(val, oldVal) {
-                this.$store.dispatch('updatePlotData', val);
+            anomalyProblemData: function(val, oldVal) {
+                this.$store.dispatch('updateAnomalyPlotData', val);
             },
 
             plotOverlap: function(val, oldVal) {
@@ -514,8 +527,13 @@
                 this.drawAnomalies(this.context)
             },
 
-            hoveredArch: function(val, oldVal) {
-                this.drawPoints(this.context, false);
+            clickedData: function(val, oldVal) {
+                this.drawAnomalies(this.context)
+            },// todo create a dynamic thing to display the data clicked
+
+            // Where the mouse is, to give feedback of the position
+            activeMouseInterval: function(val, oldVal) {
+                this.drawAnomalies(this.context);
             },
 
             clickedArch: function(val, oldVal) {
@@ -548,7 +566,7 @@
                         .on('.zoom', null);
 
                     let self = this;
-                    let justSelectedArchs = new Set();
+                    let oldSelected  = self.selectedData.slice();
 
                     function selectMousedown() {
                         let mousePos = d3.mouse(this);
@@ -559,24 +577,24 @@
                                     ry     : 0,
                                     class  : 'selection',
                                     x      : mousePos[0],
-                                    y      : mousePos[1],
+                                    y      : 0,
                                     width  : 0,
                                     height : 0,
                                     x0     : mousePos[0],
-                                    y0     : mousePos[1]
+                                    y0     : 0,
                                 })
                             .style('background-color', '#EEEEEE')
                             .style('opacity', 0.18)
                             .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-                        justSelectedArchs = new Set();
+                        oldSelected = self.selectedData.slice();
                     }
 
                     function selectMousemove() {
                         let selection = svg.select('rect.selection');
                         if (!selection.empty()) {
-                            let selectionUpdated = false;
                             let mousePos = d3.mouse(this);
 
+                            // Creates the selection box
                             let box = {
                                 x      : parseInt(selection.attr('x'), 10),
                                 y      : parseInt(selection.attr('y'), 10),
@@ -587,8 +605,7 @@
                             };
 
                             let move = {
-                                x : mousePos[0] - box.x0,
-                                y : mousePos[1] - box.y0
+                                x : mousePos[0] - box.x0
                             };
 
                             if (move.x < 0) {
@@ -598,80 +615,39 @@
                                 box.x = box.x0;
                             }
 
-                            if (move.y < 0) {
-                                box.y = box.y0 + move.y;
-                            }
-                            else {
-                                box.y = box.y0;
-                            }
-
                             box.width = Math.abs(move.x);
-                            box.height = Math.abs(move.y);
+                            box.height = self.plotHeight;
 
                             selection.attrs(box);
 
-                            let newSelectedArchs = self.selectedArchs.slice();
+                            let newSelectedData = self.selectedData.slice();
 
                             if (self.selectionMode === 'drag-select') { // Make selection
-                                self.plotData.forEach((point, index) => {
-                                    let tx = self.transform.applyX(self.xMap(point));
-                                    let ty = self.transform.applyY(self.yMap(point));
-
-                                    if( tx >= box.x && tx <= box.x + box.width &&
-                                        ty >= box.y && ty <= box.y + box.height)
-                                    {
-                                        if (!self.hiddenArchs[index] && !self.selectedArchs[index]) {
-                                            // Select
-                                            newSelectedArchs[index] = true;
-                                            justSelectedArchs.add(index);
-                                            selectionUpdated = true;
-
-                                        }
-                                    }
-                                    else {
-                                        if (!self.hiddenArchs[index] && justSelectedArchs.has(index)) {
-                                            // Select
-                                            newSelectedArchs[index] = false;
-                                            justSelectedArchs.delete(index);
-                                            selectionUpdated = true;
-                                        }
-                                    }
+                                self.anomalyProblemData.forEach((point, index) => {
+                                    let tx = self.transform.applyX(self.preMappedX[index]);
+                                    newSelectedData[index] = (tx >= box.x) && (tx <= (box.x + box.width));
+                                    newSelectedData[index] = newSelectedData[index] || oldSelected [index];
                                 });
                             }
                             else {  // De-select
-                                self.plotData.forEach((point, index) => {
-                                    let tx = self.transform.applyX(self.xMap(point));
-                                    let ty = self.transform.applyY(self.yMap(point));
-
-                                    if( tx >= box.x && tx <= box.x + box.width &&
-                                        ty >= box.y && ty <= box.y + box.height)
-                                    {
-                                        if (!self.hiddenArchs[index] && self.selectedArchs[index]) {
-                                            newSelectedArchs[index] = false;
-                                            justSelectedArchs.add(index);
-                                            selectionUpdated = true;
-                                        }
-                                    }
-                                    else {
-                                        if (!self.hiddenArchs[index] && justSelectedArchs.has(index)) {
-                                            newSelectedArchs[index] = true;
-                                            justSelectedArchs.delete(index);
-                                            selectionUpdated = true;
-                                        }
-                                    }
+                                self.anomalyProblemData.forEach((point, index) => {
+                                    let tx = self.transform.applyX(self.preMappedX[index]);
+                                    newSelectedData[index] = !(tx >= box.x && tx <= box.x + box.width);
+                                    newSelectedData[index] = newSelectedData[index] && oldSelected [index];
                                 });
                             }
 
-                            if (selectionUpdated) {
-                                self.$store.commit('updateSelectedArchs', newSelectedArchs);
-                            }
+                            self.$store.commit('updateSelectedData', newSelectedData);
+
+                            // console.log(newSelectedData);
+
+
                         }
                     }
 
                     function selectMouseup() {
                         // remove selection frame
                         svg.selectAll('rect.selection').remove();
-                        justSelectedArchs.clear();
                     }
 
                     svg.on('mousedown.modes', selectMousedown)
@@ -710,7 +686,7 @@
 
         mounted() {
             window.addEventListener('resize', () => {
-                this.updatePlot('index', 'value');
+                this.updatePlot('timestamp', this.variableChosen);
             });
         }
     }
