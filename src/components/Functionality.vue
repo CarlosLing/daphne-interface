@@ -25,6 +25,7 @@
     // Anomaly detection
     import AnomalyDetection from './AnomalyDetection';
     import DataLoader from './DataLoader';
+    import AnomalyQuestions from './AnomalyQuestions'
 
     let sizeScale = [
         'one-third',
@@ -49,7 +50,8 @@
             EOSSFilter,
             FeatureApplication,
             AnomalyDetection,
-            DataLoader
+            DataLoader,
+            AnomalyQuestions
         },
         computed: {
             sizeClass: function () {

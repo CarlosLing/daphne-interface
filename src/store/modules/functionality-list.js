@@ -27,11 +27,23 @@ functionalityTypes.set('DataLoader', {
     minSize: 'one-third',
     maxRepeat: 1,
     optionsList: [
-        // Here we will be listing all the methods implemented
-        // Algorithms parameters are defined in algorithmsInfo in 'anomaly-problem'
+        // Here we will be listing the sample data sets available
         {name: "", value: ""},
         {name: "Temperature", value: "sample.csv"},
         {name: "Traffic", value: "sample_2.csv"}
+    ]
+});
+
+functionalityTypes.set('AnomalyQuestions', {
+    title: 'Anomaly Questions',
+    component: 'AnomalyQuestions',
+    class: 'anomaly-questions',
+    minSize: 'one-third',
+    maxRepeat: 1,
+    optionsList: [
+        // Here we will be listing the questions available for anomaly detection
+        {name: "", value: ""},
+        {name: "Is there seasonality on the selected variable?", value: "CheckSeasonality"}
     ]
 });
 
@@ -94,7 +106,8 @@ const state = {
         { name: 'DaphneAnswer', title: 'Answers', icon: 'fa-comments' },
         { name: 'DesignBuilder', title: 'Design Builder', icon: 'fa-search' },
         { name: 'AnomalyDetection', title: 'Anomaly Detection', icon: 'fa-chart-bar' },
-        { name: 'DataLoader', title: 'Data Loader', icon: 'fa-chart-bar' },
+        { name: 'DataLoader', title: 'Data Loader', icon: 'fa-upload' },
+        { name: 'AnomalyQuestions', title: 'Questions', icon: 'fa-question-circle' },
         { name: 'DataMining', title: 'Data Mining', icon: 'fa-chart-bar' },
         { name: 'EOSSFilter', title: 'Filter', icon: 'fa-filter' },
         { name: 'FeatureApplication', title: 'Feature Application', icon: 'fa-sitemap' },
@@ -107,6 +120,7 @@ const state = {
         'DaphneAnswer': 0,
         'DesignBuilder': 0,
         'AnomalyDetection': 0,
+        'AnomalyQuestions': 0,
         'DataLoader': 0,
         'DataMining': 0,
         'EOSSFilter': 0,

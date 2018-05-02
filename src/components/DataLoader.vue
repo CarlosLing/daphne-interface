@@ -70,27 +70,8 @@
                 this.$store.dispatch('loadAnomalyDataFromFile', fileField.files[0]);
                 this.isDataLoaded = true;
                 this.loadedData = fileField.files[0]['name'] + "(Uploaded)";
-
-                // let files = e.target.files || e.dataTransfer.files;
-                // console.log(files[0]);
-                // if (!files.length)
-                //     return;
-                // this.createInput(files[0]);
-            },
-
-            createInput(file) {
-                let reader = new FileReader();
-                let vm = this;
-                reader.onload = (e) => {
-
-                    vm.fileinput = reader.result;
-                };
-                reader.readAsText(file);
-
-                console.log(this.fileinput);
             }
         }
-
     }
 
 </script>

@@ -1,6 +1,7 @@
 import store from "../index";
 
-let algorithmsInfo= new Map();
+// Defines all algorithms Parameters and characteristics
+let algorithmsInfo = new Map();
 
 // Note that new algorithms must be included in the Option list of Anomaly Detection in './functionality-list.js'
 algorithmsInfo.set('ADWindowedStats', {
@@ -43,6 +44,7 @@ algorithmsInfo.set('SARIMAX_AD', {
 algorithmsInfo.set('adaptiveKNN', {
     name: 'Adaptive Kernel Density Based',
     type: "MultiVariate",
+
     parameters: [
         {name: "Number of Nearest Neighbors", variable: "k", defaultValue: 10, value: 10, varType: "int",
             description: "Data points considered to compute Kernel Radius."},
@@ -67,6 +69,19 @@ algorithmsInfo.set('iForest', {
     ]
 });
 
+// Defines all the implemented questions parameters
+// The parameters must be asked by Daphne in the
+// Or must be introduced directly on the question:
+// ... fixing max lag analyzed in 2000/ using 2000 as max lag analyzed
+let questionsInfo = new Map();
+
+questionsInfo.set('CheckSeasonality', {
+    name: 'Is there seasonality on the selected variable?',
+    parameters: [
+        {name: "Max lag analyzed", variable:"n", defaultValue: 100, value: 100, varType:"int"}
+    ]
+});
+
 // Defines the Name given to the anomaly score name from the algorithms output
 let anomalyScoreName = "anomalyScore";
 
@@ -83,10 +98,15 @@ const state = {
     methodsAPI: ["ADWindowedStats"],
     methodsWS: ["SARIMAX_AD", "adaptiveKNN", "iForest"],
 
+    // Variables related to the AD Algorithm
     algorithmParameters: [],
     chosenAlgorithm: "None",
     currentDetectedAnomalies: [],
-    websocketAD: null
+    websocketAD: null,
+
+    // Variables related to the question asked
+    questionParameters:[],
+    writtenResponse:[]  // Contains the response of the questions organized in three points(intro, bulletpoints, postdata) \\ todo change this to allow multiple object of these kind on the written response
 };
 
 const getters = {
@@ -136,6 +156,14 @@ const getters = {
 
     getAlgorithmParameters: (state) => (Algorithm) => {
         return algorithmsInfo.get(Algorithm).parameters;
+    },
+
+    getQuestionParameters: (state) => (Question) => {
+        return questionsInfo.get(Question).parameters;
+    },
+
+    getWrittenResponse(state){
+        return state.writtenResponse;
     }
 };
 
@@ -143,7 +171,7 @@ const actions = {
 
     async detectAnomalies({state, getters, commit}, Method) {
         try {
-            commit("updateIsRunning", true);
+            commit("updateIsRunning", true); // To give the user feedback on the algorithm execution
 
             // Adds the data
             let reqData = {data: JSON.stringify(getters.getAnomalyProblemData)};
@@ -162,7 +190,7 @@ const actions = {
             });
 
             if (state.methodsAPI.includes(Method)) {
-                console.log("Running Anomaly detection method (" + Method +") from API")
+                console.log("Running Anomaly detection method (" + Method +") from API");
                 let dataResponse = await fetch(
                     'api/anomaly/' + Method,
                     {
@@ -177,7 +205,8 @@ const actions = {
 
                 if (dataResponse.ok) {
                     let data = await dataResponse.json();
-                    if (data.includes('error')) {
+                    console.log(data); // Todo this is not working as expected use hasOwnProperty instead for an already parsed object
+                    if (data.includes('error')) { // Todo try if errors are working properly
                         console.error('Internal Algorithm error: ' + data['error']);
                         // TODO: Implement this to show it on the web
                     }
@@ -233,14 +262,14 @@ const actions = {
                     store.commit('setWebsocketAD', websocket);
 
                 });
-
+                // On the answer of the websocket
                 websocketPromise.then(() => {
                     state.websocketAD.send(JSON.stringify(reqData));
                 });
             }
         }
         catch (e) {
-            console.log("Networking error: ", e)
+            console.error("Networking error: ", e)
         }
     },
 
@@ -304,6 +333,65 @@ const actions = {
             console.error('Networking error: ', e);
 
         }
+    },
+
+    async answerAnomalyQuestion({commit, getters, state}, questionCode) {
+        try{
+            // commit("updateIsRunning", true); // Todo give the user feedback on the analysis execution
+            // Adds the datax
+            let reqData = {data: JSON.stringify(getters.getAnomalyProblemData)};
+
+            // Adds the Variable we are focusing on
+            reqData['variable'] = getters.getVariableChosen;
+
+            // Add the parameters to the request
+            state.questionParameters.forEach((parameter) => {
+                if (parameter.varType === "int") {
+                    reqData[parameter.variable] = parseInt(parameter.value);
+                }
+                else if (parameter.varType === "float"){
+                    reqData[parameter.variable] = parseFloat(parameter.value);
+                }
+            });
+
+            console.log("Resolving Request to " + questionCode + " question");
+            let dataResponse = await fetch(
+                'api/anomaly/analysis/' + questionCode,
+                {
+                    method: 'POST',
+                    body: JSON.stringify(reqData),
+                    headers: new Headers({
+                        'Content-Type': 'application/json'
+                    }),
+                    credentials: 'same-origin'
+                }
+            );
+
+            if (dataResponse.ok) {
+                let data = await dataResponse.json();
+                console.log(data);
+                if (data.hasOwnProperty('error')) {
+                    console.error('Internal Algorithm error: ' + data['error']);
+                    // TODO: Implement this to show it on the web
+                }
+                else {
+                    // commit("updateIsRunning", false);
+                    // Commits the response to be shown in Daphne interface
+                    if(data.hasOwnProperty('writtenResponse')){
+                        commit("updateWrittenResponse", data['writtenResponse']);
+                    }
+                    // Todo do the same to responses related with setting a threshold
+                }
+            }
+            else {
+                console.error('Error accessing the data');
+            }
+        }
+
+        catch (e) {
+            console.error("Networking error: ", e);
+
+        }
     }
 };
 
@@ -324,7 +412,7 @@ const mutations = {
         state.anomalyVariablesCorrelation = correlations
     },
 
-    addDetectedAnomalies(state, newAnomalies) {
+    addDetectedAnomalies(state, newAnomalies) { // Todo modify this in order to only fill the variable.method anomalies
         state.allDetectedAnomalies.push(JSON.parse(newAnomalies))
     },
 
@@ -334,6 +422,14 @@ const mutations = {
 
     updateAlgorithmParameters(state, algorithmParameters){
         state.algorithmParameters = algorithmParameters
+    },
+
+    updateQuestionParameters(state, questionParameters) {
+        state.questionParameters = questionParameters
+    },
+
+    updateWrittenResponse(state, writtenResponse) {
+        state.writtenResponse = writtenResponse;
     },
 
     updateNameChosenAlgorithm(state, newChosenAlgorithmName) {
