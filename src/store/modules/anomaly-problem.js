@@ -4,9 +4,14 @@ import store from "../index";
 let algorithmsInfo = new Map();
 
 // Note that new algorithms must be included in the Option list of Anomaly Detection in './functionality-list.js'
+algorithmsInfo.set('none', {
+    name: "No Algorithm has been selected"
+});
+
 algorithmsInfo.set('ADWindowedStats', {
     name: "Windowed Statistic Method",
     type: "UniVariate",
+    code: 'ADWindowedStats',
     parameters:[
         {name: "Window Parameter", variable: "w", defaultValue: 100, value: 100, varType:"int",
             description: "Fixes the number of observations before the data to be analyzed. \nA higher number implies the anomaly detected is an outlier in a more general context, while a smaller number will imply that the anomaly is local"},
@@ -22,6 +27,7 @@ algorithmsInfo.set('ADWindowedStats', {
 algorithmsInfo.set('SARIMAX_AD', {
     name: "Seasonal ARIMA + Exogenous Variables",
     type: "UniVariate",
+    code: 'SARIMAX_AD',
     parameters:[
         {name: "Seasonality", variable: "seasonality", defaultValue: 24, value: 24, varType:"int",
             description: "Indicates the seasonality assumed for the data. This means that the data is considered " +
@@ -44,7 +50,7 @@ algorithmsInfo.set('SARIMAX_AD', {
 algorithmsInfo.set('adaptiveKNN', {
     name: 'Adaptive Kernel Density Based',
     type: "MultiVariate",
-
+    code: 'adaptiveKNN',
     parameters: [
         {name: "Number of Nearest Neighbors", variable: "k", defaultValue: 10, value: 10, varType: "int",
             description: "Data points considered to compute Kernel Radius."},
@@ -59,6 +65,7 @@ algorithmsInfo.set('adaptiveKNN', {
 algorithmsInfo.set('iForest', {
     name: 'Isolation Forest',
     type: "MultiVariate",
+    code: 'iForest',
     parameters: [
         {name: "Number of Trees", variable: "t", defaultValue: 20, value: 20, varType: "int",
             description: "Number of trees computed to set the isolation forest"},
@@ -100,11 +107,16 @@ const state = {
 
     // Variables related to the AD Algorithm
     algorithmParameters: [],
-    chosenAlgorithm: "None",
-    currentDetectedAnomalies: [],
+    numberAnomalies: 0, // Todo check how to compute this
+    detectedOneVarAnomalies:{},
+    multiVariateAnomalyScores:{},
     websocketAD: null,
 
+    oneVarAlgorithmSelected: 'none',
+    multiVarAlgorithmSelected: 'none',
+
     // Variables related to the question asked
+    dummyDrawAnomalies: false, // Switch to watch the changes of the detectedOneVarAnomalies
     questionParameters:[],
     writtenResponse:[]  // Contains the response of the questions organized in three points(intro, bulletpoints, postdata) \\ todo change this to allow multiple object of these kind on the written response
 };
@@ -112,6 +124,14 @@ const state = {
 const getters = {
     getAnomalyProblemData(state) {
         return state.anomalyProblemData;
+    },
+
+    getOneVarAlgorithmSelected(state){
+        return state.oneVarAlgorithmSelected;
+    },
+
+    getMultiVarAlgorithmSelected(state){
+        return state.multiVarAlgorithmSelected;
     },
 
     getAnomalyScoreName() {
@@ -134,16 +154,12 @@ const getters = {
         return state.variableChosen;
     },
 
-    getCurrentDetectedAnomalies(state) {
-        return state.currentDetectedAnomalies
+    getDetectedOneVarAnomalies(state){
+        return state.detectedOneVarAnomalies;
     },
 
     getNumberAnomalies(state){
-        return state.currentDetectedAnomalies.length;
-    },
-
-    getChosenAlgorithm(state){
-        return state.chosenAlgorithm
+        return state.numberAnomalies
     },
 
     getAlgorithmName: (state) => (Algorithm) => {
@@ -160,6 +176,14 @@ const getters = {
 
     getQuestionParameters: (state) => (Question) => {
         return questionsInfo.get(Question).parameters;
+    },
+
+    getDummyDrawAnomalies(state){
+        return state.dummyDrawAnomalies;
+    },
+
+    getMultiVariateAnomalyScores(state){
+        return state.multiVariateAnomalyScores;
     },
 
     getWrittenResponse(state){
@@ -205,7 +229,6 @@ const actions = {
 
                 if (dataResponse.ok) {
                     let data = await dataResponse.json();
-                    console.log(data); // Todo this is not working as expected use hasOwnProperty instead for an already parsed object
                     if (data.includes('error')) { // Todo try if errors are working properly
                         console.error('Internal Algorithm error: ' + data['error']);
                         // TODO: Implement this to show it on the web
@@ -213,11 +236,17 @@ const actions = {
                     else {
                         commit("updateIsRunning", false);
                         if(getters.isAlgorithmMultiVariate(Method)){
-                            commit("updateAnomalyData", JSON.parse(data))
+                            commit("updateMultiVariateAnomalyScores", {
+                                'algorithm': Method,
+                                'anomalyScore': JSON.parse(data)
+                            })
                         }
                         else {
-                            commit("addDetectedAnomalies", data);
-                            commit("updateCurrentDetectedAnomalies", data);
+                            commit("updateDetectedOneVarAnomalies", {
+                                'variable': getters.getVariableChosen,
+                                'algorithm': Method,
+                                'anomalies': JSON.parse(data)
+                            });
                         }
                     }
                 }
@@ -251,12 +280,19 @@ const actions = {
                         else {
                             commit("updateIsRunning", false);
                             if(getters.isAlgorithmMultiVariate(Method)){
-                                commit("updateAnomalyData", JSON.parse(data))
+                                commit("updateMultiVariateAnomalyScores",{
+                                    'algorithm': Method,
+                                    'anomalyScore': JSON.parse(data)
+                                })
                             }
                             else {
-                                commit("addDetectedAnomalies", data);
-                                commit("updateCurrentDetectedAnomalies", data);
+                                commit("updateDetectedOneVarAnomalies", {
+                                    'variable': getters.getVariableChosen,
+                                    'algorithm': Method,
+                                    'anomalies': JSON.parse(data)
+                                });
                             }
+                            commit("switchDrawAnomalies");
                         }
                     };
                     store.commit('setWebsocketAD', websocket);
@@ -290,9 +326,10 @@ const actions = {
 
             if (dataResponse.ok) {
                 let data = await dataResponse.json();
-                commit('updateAnomalyData', data['data']);
+                commit('updateAnomalyData', data['data']);  // Todo simplify by declaring it in a function
                 commit('updateAnomalyVariables', data['variables']);
                 commit('updateAnomalyVariablesCorrelation', data['correlation']);
+                commit('initializeAlgorithmsResultVectors');
             }
             else{
                 console.error('Error accessing the data');
@@ -324,6 +361,7 @@ const actions = {
                 commit('updateAnomalyData', data['data']);
                 commit('updateAnomalyVariables', data['variables']);
                 commit('updateAnomalyVariablesCorrelation', data['correlation']);
+                commit('initializeAlgorithmsResultVectors');
             }
             else{
                 console.error('Error accessing the data');
@@ -400,6 +438,14 @@ const mutations = {
         state.isRunning = newState;
     },
 
+    updateOneVarAlgorithmSelected(state, algorithmCode){
+        state.oneVarAlgorithmSelected = algorithmCode;
+    },
+
+    updateMultiVarAlgorithmSelected(state, algorithmCode){
+        state.multiVarAlgorithmSelected= algorithmCode;
+    },
+
     updateAnomalyData(state, anomalyData) {
         state.anomalyProblemData = anomalyData
     },
@@ -412,12 +458,20 @@ const mutations = {
         state.anomalyVariablesCorrelation = correlations
     },
 
-    addDetectedAnomalies(state, newAnomalies) { // Todo modify this in order to only fill the variable.method anomalies
-        state.allDetectedAnomalies.push(JSON.parse(newAnomalies))
+    initializeAlgorithmsResultVectors(state){
+        state.anomalyVariables.forEach((variable)=>{
+            state.detectedOneVarAnomalies[variable] = {};
+        });
+        state.multiVariateAnomalyScores['none'] = [];
+        algorithmsInfo.forEach((algorithm)=>{
+            if(algorithm.type === 'MultiVariate'){
+                state.multiVariateAnomalyScores[algorithm.code] = [];
+            }
+        });
     },
 
-    updateCurrentDetectedAnomalies(state, anomalies) {
-        state.currentDetectedAnomalies = JSON.parse(anomalies)
+    updateDetectedOneVarAnomalies(state, updateParameters){
+        state.detectedOneVarAnomalies[updateParameters.variable][updateParameters.algorithm] = updateParameters.anomalies;
     },
 
     updateAlgorithmParameters(state, algorithmParameters){
@@ -432,12 +486,17 @@ const mutations = {
         state.writtenResponse = writtenResponse;
     },
 
-    updateNameChosenAlgorithm(state, newChosenAlgorithmName) {
-        state.chosenAlgorithm = newChosenAlgorithmName
+
+    updateMultiVariateAnomalyScores(state, updateParameters){
+        state.multiVariateAnomalyScores[updateParameters.algorithm] = updateParameters.anomalyScore;
     },
 
     setWebsocketAD(state,websocket) {
         state.websocketAD = websocket;
+    },
+
+    switchDrawAnomalies(state){
+        state.dummyDrawAnomalies = ! state.dummyDrawAnomalies;
     },
 
     updateVariableChosen(state, variable) {

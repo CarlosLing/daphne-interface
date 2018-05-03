@@ -7,18 +7,24 @@ const state = {
 
     colorAnomalyPlot: {
         default: 'rgba(110,110,110,255)',
-        oneVariableStroke: 'rgba(110,110,110,1)',
-        multiVariableStroke: 'rgba(50,50,110,0)',
-        oneVariableAnomaly: 'rgba(255,0,0,1)',
+        oneVariableStroke: 'rgba(50,50,50,1)',
+        multiVariableStroke: 'rgba(30,30,75,0)',
+        oneVariableAnomaly: 'rgba(255,0,0,0.5)',
         indicatorStroke: 'rgba(200,200,200,1)',
         clickedData: 'rgba(255,200,200,1)',
-        selectedData: 'rgba(200,200,255,0.5)'
+        selectedData: 'rgba(100,100,120,0.5)'
     },
 
     activeMouseInterval: [], //
     mouseRange: 2, // indicates the interval on which
-    hoveredData: [],
-    clickedData: [],
+    hoveredData: {
+        dataPoint: [],
+        anomalyScore: []
+    },
+    clickedData: {
+        dataPoint: [],
+        anomalyScore: []
+    },
     selectedData: [],
     preMappedX: [] // PreMapped X to avoid slow time parsing
 };
@@ -60,7 +66,7 @@ const actions = {
         commit('updateAnomalyPlotData', problemData);
 
         // initializes auxiliary variables
-        commit('clearSelectedData');
+        commit('clearSelectedData'); // Todo avoid this when a multivariate method is performed
         commit('initPreMappedX');
     }
 };
@@ -82,12 +88,12 @@ const mutations = {
 
     updatePlotColors(state) {
         if (state.activePlotTab === "oneVariable"){
-            state.colorAnomalyPlot.oneVariableStroke = 'rgba(110,110,110,1)';
-            state.colorAnomalyPlot.multiVariableStroke = 'rgba(50,50,110,0)';
-            state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,0,0,1)';
+            state.colorAnomalyPlot.oneVariableStroke = 'rgba(50,50,50,1)';
+            state.colorAnomalyPlot.multiVariableStroke = 'rgba(30,30,75,0)';
+            state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,0,0,0.5)';
         }else if(state.activePlotTab === "multiVariable"){
-            state.colorAnomalyPlot.oneVariableStroke = 'rgba(110,110,110,0)';
-            state.colorAnomalyPlot.multiVariableStroke = 'rgba(50,50,110,1)';
+            state.colorAnomalyPlot.oneVariableStroke = 'rgba(50,50,50,0)';
+            state.colorAnomalyPlot.multiVariableStroke = 'rgba(30,30,75,1)';
             state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,0,0,0)';
         }
     },
@@ -110,14 +116,14 @@ const mutations = {
 
     setOverlapColors(state, overlap) {
         if (overlap){
-            if (state.colorAnomalyPlot.oneVariableStroke === 'rgba(110,110,110,0)') {
+            if (state.colorAnomalyPlot.oneVariableStroke === 'rgba(50,50,50,0)') {
                 state.colorAnomalyPlot.oneVariableStroke = 'rgba(200,200,200,1)'
             }
-            if (state.colorAnomalyPlot.multiVariableStroke === 'rgba(50,50,110,0)') {
-                state.colorAnomalyPlot.multiVariableStroke = 'rgba(150,150,255,1)'
+            if (state.colorAnomalyPlot.multiVariableStroke === 'rgba(30,30,75,0)') {
+                state.colorAnomalyPlot.multiVariableStroke = 'rgba(190,190,230,1)'
             }
             if (state.colorAnomalyPlot.oneVariableAnomaly === 'rgba(255,0,0,0)') {
-                state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,150,150,1)'
+                state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,150,150,0.5)'
             }
         }
     },

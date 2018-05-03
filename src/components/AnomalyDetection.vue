@@ -52,7 +52,9 @@
                 isLoading: "getIsRunning",
                 getAlgorithmName: "getAlgorithmName",
                 getAlgorithmParameters: "getAlgorithmParameters",
-                variableList: "getAnomalyVariables"
+                variableList: "getAnomalyVariables",
+                getDetectedOneVarAnomalies: "getDetectedOneVarAnomalies",
+                isAlgorithmMultiVariate: 'isAlgorithmMultiVariate'
             }),
             algorithmOptions() {
                 return this.$store.getters.getOptionsList(this.name);
@@ -60,16 +62,20 @@
         },
         methods: {
             selectAlgorithm() {
-                this.algorithmsParameters = this.getAlgorithmParameters(this.selectedAlgorithm)
+                this.algorithmsParameters = this.getAlgorithmParameters(this.selectedAlgorithm);
+                if (this.isAlgorithmMultiVariate(this.selectedAlgorithm)){
+                    this.$store.commit('updateMultiVarAlgorithmSelected', this.selectedAlgorithm);
+                }else{
+                    this.$store.commit('updateOneVarAlgorithmSelected', this.selectedAlgorithm);
+                }
             },
-
             selectVariable() {
-                this.$store.commit("updateVariableChosen", this.selectedVariable)
+                this.$store.commit("updateVariableChosen", this.selectedVariable);
             },
             runAlgorithm(){
                 this.$store.commit('updateAlgorithmParameters', this.algorithmsParameters);
-                this.$store.commit('updateNameChosenAlgorithm', this.getAlgorithmName(this.selectedAlgorithm));
-                this.$store.dispatch('detectAnomalies', this.selectedAlgorithm);
+                this.$store.dispatch('detectAnomalies', this.selectedAlgorithm).then(()=>{this.$store.commit('switchDrawAnomalies')});
+
             }
         }
     }

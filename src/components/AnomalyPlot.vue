@@ -2,9 +2,10 @@
     <div class="column">
         <section class="panel">
             <p class="panel-heading">
-                Anomaly Detection |
-                <!-- TODO: Desing Heading Text -->
-                Anomalies detected: {{numberAnomalies}}  | Anomaly detection method: {{chosenAlgorithm}}
+                UniVariate Algorithm: {{getAlgorithmName(oneVarAlgorithmSelected)}} |
+                Anomalies detected: {{numberAnomalies}} |.|
+                MultiVariate Algorithm: {{getAlgorithmName(multiVarAlgorithmSelected)}} |
+                Anomalies detected: {{numberAnomalies}}
             </p>
             <div>
                 <div class="tabs is centered" id="plot-tabs">
@@ -65,9 +66,9 @@
                                 <p>
                                    Clicked Data Point:
                                 </p>
-                                <div v-if="clickedData.timestamp">
-                                    <p>{{variableChosen}}: {{clickedData[variableChosen]}}</p>
-                                    <p>Time: {{clickedData.timestamp}}</p>
+                                <div v-if="clickedData.dataPoint.timestamp">
+                                    <p>{{variableChosen}}: {{clickedData.dataPoint[variableChosen]}}</p>
+                                    <p>Time: {{clickedData.dataPoint.timestamp}}</p>
                                 </div>
                                 <div v-else>
                                     <p>No Clicked data</p>
@@ -121,7 +122,6 @@
                 activePlotTab: 'getActivePlotTab',
                 anomalyScoreName: "getAnomalyScoreName",
                 anomalyProblemData: 'getAnomalyProblemData',
-                currentDetectedAnomalies: 'getCurrentDetectedAnomalies',
                 variableChosen: 'getVariableChosen',
                 colorAnomalyPlot: 'getColorAnomalyPlot',
                 activeMouseInterval: 'getActiveMouseInterval',
@@ -129,6 +129,12 @@
                 clickedData: 'getClickedData',
                 selectedData: 'getSelectedData',
                 preMappedX: 'getPreMappedX',
+                getDetectedOneVarAnomalies: 'getDetectedOneVarAnomalies',
+                dummyDrawAnomalies: 'getDummyDrawAnomalies',
+                getAlgorithmName: 'getAlgorithmName',
+                oneVarAlgorithmSelected: 'getOneVarAlgorithmSelected',
+                multiVarAlgorithmSelected: 'getMultiVarAlgorithmSelected',
+                MultiVariateAnomalyScores: 'getMultiVariateAnomalyScores',
 
 
                 plotData: 'getPlotData',
@@ -141,7 +147,6 @@
                 hiddenArchs: 'getHiddenArchs',
                 currentExpression: 'getCurrentExpression',
                 websocket: 'getWebsocket',
-                chosenAlgorithm: 'getChosenAlgorithm',
                 numberAnomalies: 'getNumberAnomalies'
             }),
 
@@ -219,8 +224,8 @@
                 // Setup the anomaly score
                 let yAnomalyScore = d => d[this.anomalyScoreName]; // data -> value
                 let yAnomalyScoreScale = d3.scaleLinear().range([this.plotHeight, 0]); // value -> display
-                let yAnomalyScoreBuffer = Math.max((d3.max(this.anomalyProblemData, yAnomalyScore) - d3.min(this.anomalyProblemData, yAnomalyScore)) * 0.05, 0.05);
-                yAnomalyScoreScale.domain([d3.min(this.anomalyProblemData, yAnomalyScore) - yAnomalyScoreBuffer, d3.max(this.anomalyProblemData, yAnomalyScore) + yAnomalyScoreBuffer]);
+                let yAnomalyScoreBuffer = Math.max((d3.max(this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected], yAnomalyScore) - d3.min(this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected], yAnomalyScore)) * 0.05, 0.05);
+                yAnomalyScoreScale.domain([d3.min(this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected], yAnomalyScore) - yAnomalyScoreBuffer, d3.max(this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected], yAnomalyScore) + yAnomalyScoreBuffer]);
                 this.yAnomalyScoreMap = d => yAnomalyScoreScale(yAnomalyScore(d)); // data -> display
                 let yAnomalyScoreAxis = d3.axisRight(yAnomalyScoreScale);
 
@@ -235,7 +240,7 @@
                         gX.call(xAxis.scale(this.transform.rescaleX(xScale)));
                         //gY.call(yAxis.scale(this.transform.rescaleY(yScale)));
 
-                        this.drawAnomalies(this.context);
+                        this.drawAnomalyPlot(this.context);
                     });
 
                 let svg = d3.select('#main-plot')
@@ -315,7 +320,7 @@
                 }
 
                 // Canvas related functions
-                this.drawAnomalies(this.context);
+                this.drawAnomalyPlot(this.context);
 
                 // Restore old zoom values if they are there
                 gX.call(xAxis.scale(this.transform.rescaleX(xScale)));
@@ -330,12 +335,7 @@
                 canvas.on('click.inspection', function() { self.canvasClick(); });
             },
 
-            drawAnomalies(context) { // todo change the name of the function
-
-                context.clearRect(0, 0, this.plotWidth, this.plotHeight);
-                context.save();
-
-                // Draw the data
+            drawData(context) { // We take advantage of passing through all the points to tell if the mouse is over any point
                 let x0 = this.transform.applyX(this.xMap(this.anomalyProblemData[0]));
                 let y0 = this.yMap(this.anomalyProblemData[0]);
                 let [mouseX0, mouseX1] = this.activeMouseInterval;
@@ -349,75 +349,113 @@
                     context.lineTo(tx, ty);
                     if (!spottedMouseData && mouseX0 <= tx && tx <= mouseX1) {
                         spottedMouseData = true;
-                        this.updateHoveredData(point);
+                        this.updateHoveredData({dataPoint: point, anomalyScore: this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected][index]});
                     }
                 });
                 context.stroke();
+                return spottedMouseData;
+            },
 
-
-                context.fillStyle = this.colorAnomalyPlot.selectedData;
-                this.anomalyProblemData.forEach((point, index) => {
-                    if (this.selectedData[index]){
-                        let tx = this.transform.applyX(this.preMappedX[index]);
-                        let ty = this.yMap(point);
-                        context.beginPath();
-                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
-                        context.fill();
-                    }
-                });
-
-                // Todo might be interesting to add a button to disable vertical line
-
-                // Draw the anomaly score
-                let y0AS = this.yAnomalyScoreMap(this.anomalyProblemData[0]);
+            drawAnomalyScore(context){
+                let x0 = this.transform.applyX(this.xMap(this.anomalyProblemData[0]));
+                let y0AS = this.yAnomalyScoreMap(this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected][0]);
                 context.strokeStyle = this.colorAnomalyPlot.multiVariableStroke;
                 context.beginPath();
                 context.moveTo(x0, y0AS);
-                this.anomalyProblemData.forEach((point, index) => {
+                this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected].forEach((point, index) => {
                     let tx = this.transform.applyX(this.preMappedX[index]);
                     let ty = this.yAnomalyScoreMap(point);
                     context.lineTo(tx, ty);
                 });
                 context.stroke();
-                // TODO do this more modular
-                // Print feedback on the hovering
-                // Prints the points
-                let x = this.transform.applyX(this.xMap(this.hoveredData));
-                let y1 = this.yMap(this.hoveredData);
-                let y2 = this.yAnomalyScoreMap(this.hoveredData);
+            },
+
+            drawAnomalies(context){
+                context.fillStyle = this.colorAnomalyPlot.oneVariableAnomaly;
+                if(this.getDetectedOneVarAnomalies[this.variableChosen][this.oneVarAlgorithmSelected] !== undefined) {
+                    this.getDetectedOneVarAnomalies[this.variableChosen][this.oneVarAlgorithmSelected].forEach((point) => {
+                        let tx = this.transform.applyX(this.xMap(point));
+                        let ty = this.yMap(point);
+                        context.beginPath();
+                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
+                        context.fill();
+                    });
+                }
+            },
+
+            markSelectedData(context){
+                context.fillStyle = this.colorAnomalyPlot.selectedData;
+                this.anomalyProblemData.forEach((point, index) => {
+                    if (this.selectedData[index]){
+                        let tx = this.transform.applyX(this.preMappedX[index]);
+                        let ty = 0;
+                        if (this.activePlotTab === 'oneVariable'){
+                            ty = this.yMap(point);
+                        }else{
+                            if (this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected].length) {
+                                ty = this.yAnomalyScoreMap(this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected][index]);
+                            }
+                        }
+                        context.beginPath();
+                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
+                        context.fill();
+                    }
+                });
+            },
+
+            drawMouseFeedBack(context, spottedMouseData){
+                // HOVERING
+                // POINTS
+                let x = this.transform.applyX(this.xMap(this.hoveredData.dataPoint));
+                let y1 = this.yMap(this.hoveredData.dataPoint);
+                let y2 = [];
+                if (this.hoveredData.anomalyScore !== undefined){
+                    y2 = this.yAnomalyScoreMap(this.hoveredData.anomalyScore);
+                }
                 if (spottedMouseData) {
                     context.fillStyle = this.colorAnomalyPlot.oneVariableStroke;
                     context.fillRect(x - 4, y1 - 4, 8, 8);
                     context.fillStyle = this.colorAnomalyPlot.multiVariableStroke;
                     context.fillRect(x - 4, y2 - 4, 8, 8);
                 }
-                // Prints the line
+                // LINE
                 context.strokeStyle = this.colorAnomalyPlot.indicatorStroke;
                 context.beginPath();
                 context.moveTo(x,0);
                 context.lineTo(x,(this.mainPlotParams.height));
                 context.stroke();
 
-                if(this.clickedData.timestamp){ // Check a better way to do this
-                    let x = this.transform.applyX(this.xMap(this.clickedData));
+                // CLICKING
+                // LINE
+                if(this.clickedData.dataPoint.timestamp){ // Check a better way to do this
+                    let x = this.transform.applyX(this.xMap(this.clickedData.dataPoint));
                     context.strokeStyle = this.colorAnomalyPlot.clickedData;
                     context.beginPath();
                     context.moveTo(x,0);
                     context.lineTo(x,(this.mainPlotParams.height));
                     context.stroke();
                 }
+            },
 
+            drawAnomalyPlot(context) { // todo change the name of the function
 
-                // Draw the anomaly points
-                context.fillStyle = this.colorAnomalyPlot.oneVariableAnomaly;
-                this.currentDetectedAnomalies.forEach((point) =>{
-                    let tx = this.transform.applyX(this.xMap(point));
-                    let ty = this.yMap(point);
-                    //console.log(tx, ty);
-                    context.beginPath();
-                    context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
-                    context.fill();
-                });
+                context.clearRect(0, 0, this.plotWidth, this.plotHeight);
+                context.save();
+
+                // Draw the data
+                let spottedMouseData = this.drawData(context);
+
+                this.markSelectedData(context);
+
+                if (this.MultiVariateAnomalyScores[this.multiVarAlgorithmSelected].length) {
+                    this.drawAnomalyScore(context);
+                }
+                if (this.oneVarAlgorithmSelected !== 'none'){
+                    this.drawAnomalies(context);
+                }
+
+                this.drawMouseFeedBack(context, spottedMouseData);
+
                 context.restore();
             },
 
@@ -513,6 +551,7 @@
         watch: {
             anomalyProblemData: function(val, oldVal) {
                 this.$store.dispatch('updateAnomalyPlotData', val);
+                this.updatePlot('timestamp', this.variableChosen);
             },
 
             plotOverlap: function(val, oldVal) {
@@ -523,17 +562,25 @@
                 this.updatePlot('timestamp', val);
             },
 
-            currentDetectedAnomalies: function(val, oldVal) {
-                this.drawAnomalies(this.context)
+            oneVarAlgorithmSelected: function(val, oldVal) {
+                this.updatePlot('timestamp', this.variableChosen);
+            },
+
+            multiVarAlgorithmSelected: function(val, oldVal) {
+                this.updatePlot('timestamp', this.variableChosen);
+            },
+
+            dummyDrawAnomalies: function(val, oldVal) {
+                this.updatePlot('timestamp', this.variableChosen);
             },
 
             clickedData: function(val, oldVal) {
-                this.drawAnomalies(this.context)
+                this.drawAnomalyPlot(this.context)
             },// todo create a dynamic thing to display the data clicked
 
             // Where the mouse is, to give feedback of the position
             activeMouseInterval: function(val, oldVal) {
-                this.drawAnomalies(this.context);
+                this.drawAnomalyPlot(this.context);
             },
 
             clickedArch: function(val, oldVal) {
