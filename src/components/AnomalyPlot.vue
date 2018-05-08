@@ -130,6 +130,7 @@
                 selectedData: 'getSelectedData',
                 preMappedX: 'getPreMappedX',
                 getDetectedOneVarAnomalies: 'getDetectedOneVarAnomalies',
+                getDetectedMultiVarAnomalies: 'getDetectedMultiVarAnomalies',
                 dummyDrawAnomalies: 'getDummyDrawAnomalies',
                 getAlgorithmName: 'getAlgorithmName',
                 oneVarAlgorithmSelected: 'getOneVarAlgorithmSelected',
@@ -139,13 +140,7 @@
 
                 plotData: 'getPlotData',
                 colorMap: 'getColorMap',
-                hoveredArch: 'getHoveredArch',
-                clickedArch: 'getClickedArch',
                 numPoints: 'getNumPoints',
-                selectedArchs: 'getSelectedArchs',
-                highlightedArchs: 'getHighlightedArchs',
-                hiddenArchs: 'getHiddenArchs',
-                currentExpression: 'getCurrentExpression',
                 websocket: 'getWebsocket',
                 numberAnomalies: 'getNumberAnomalies'
             }),
@@ -296,7 +291,7 @@
                         .text(yIndex);
 
 
-                    gY.call(yAxis.scale(this.transform.rescaleY(yScale)));
+                    gY.call(yAxis.scale(yScale));
                 }
 
                 if (this.activePlotTab === "multiVariable" || this.plotOverlap) {
@@ -370,17 +365,26 @@
                 context.stroke();
             },
 
-            drawAnomalies(context){
+            drawOneVarAnomalies(context){
                 context.fillStyle = this.colorAnomalyPlot.oneVariableAnomaly;
-                if(this.getDetectedOneVarAnomalies[this.variableChosen][this.oneVarAlgorithmSelected] !== undefined) {
-                    this.getDetectedOneVarAnomalies[this.variableChosen][this.oneVarAlgorithmSelected].forEach((point) => {
-                        let tx = this.transform.applyX(this.xMap(point));
-                        let ty = this.yMap(point);
-                        context.beginPath();
-                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
-                        context.fill();
-                    });
-                }
+                this.getDetectedOneVarAnomalies[this.variableChosen][this.oneVarAlgorithmSelected].forEach((point) => {
+                    let tx = this.transform.applyX(this.xMap(point));
+                    let ty = this.yMap(point);
+                    context.beginPath();
+                    context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
+                    context.fill();
+                });
+            },
+
+            drawMultiVarAnomalies(context){
+                context.fillStyle = this.colorAnomalyPlot.multiVariableAnomaly;
+                this.getDetectedMultiVarAnomalies[this.multiVarAlgorithmSelected].forEach((point) => {
+                    let tx = this.transform.applyX(this.xMap(point));
+                    let ty = this.yAnomalyScoreMap(point);
+                    context.beginPath();
+                    context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
+                    context.fill();
+                });
             },
 
             markSelectedData(context){
@@ -451,34 +455,13 @@
                     this.drawAnomalyScore(context);
                 }
                 if (this.oneVarAlgorithmSelected !== 'none'){
-                    this.drawAnomalies(context);
+                    this.drawOneVarAnomalies(context);
+                }
+                if (this.multiVarAlgorithmSelected !== 'none'){
+                    this.drawMultiVarAnomalies(context);
                 }
 
                 this.drawMouseFeedBack(context, spottedMouseData);
-
-                context.restore();
-            },
-
-            drawPoints(context, hidden) {
-                context.clearRect(0, 0, this.plotWidth, this.plotHeight);
-                context.save();
-
-                this.plotData.forEach((point, index) => {
-                    let pointColor = this.$store.getters.getPointColor(index);
-                    let pointShape = this.$store.getters.getPointShape(index);
-                    let tx = this.transform.applyX(this.xMap(point));
-                    let ty = this.transform.applyY(this.yMap(point));
-                    context.fillStyle = hidden ? point.interactColor : pointColor;
-                    if (hidden || pointShape === 'circle') {
-                        context.beginPath();
-                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
-                        context.fill();
-                    }
-                    else if (pointShape === 'cross') {
-                        context.fillRect(tx - 4, ty - 1, 8, 2);
-                        context.fillRect(tx - 1, ty - 4, 2, 8);
-                    }
-                });
 
                 context.restore();
             },
@@ -499,53 +482,12 @@
                 this.$store.commit('setClickedData')
             },
 
-            /*
-               Removes selections and/or highlights in the scatter plot
-               @param option: option to remove all selections and highlights or remove only highlights
-            */
             cancelSelection() {
                 // Remove both clicked and selections
                 this.$store.commit('clearSelectedData');
                 this.$store.commit('clearClickedData');
             },
 
-            // Check function
-            async updateTargetSelection() {
-                let selectedIds = [];
-                let nonSelectedIds = [];
-                this.selectedArchs.forEach((point, index) => {
-                    if (point) {
-                        selectedIds.push(index);
-                    }
-                    else {
-                        nonSelectedIds.push(index);
-                    }
-                });
-
-                try {
-                    let reqData = new FormData();
-                    reqData.append('selected', JSON.stringify(selected));
-                    reqData.append('non_selected', JSON.stringify(non_selected));
-                    let dataResponse = await fetch(
-                        '/api/ifeed/set-target',
-                        {
-                            method: 'POST',
-                            body: reqData,
-                            credentials: 'same-origin'
-                        }
-                    );
-
-                    if (dataResponse.ok) {
-                        console.log('Target selection updated')
-                    }
-                    else {
-                        console.error('Error obtaining the driving features.');
-                    }
-                }
-                catch(e) {
-                    console.error('Networking error:', e);
-                }
-            }
         },
 
         watch: {
@@ -583,9 +525,6 @@
                 this.drawAnomalyPlot(this.context);
             },
 
-            clickedArch: function(val, oldVal) {
-                this.drawPoints(this.context, false);
-            },
 
             selectionMode: function(val, oldVal) {
                 let margin = this.mainPlotParams.margin;
@@ -705,29 +644,6 @@
                         .on('mousemove.modes', selectMousemove)
                         .on('mouseup.modes', selectMouseup);
                 }
-            },
-
-            selectedArchs: function(val, oldVal) {
-                this.drawPoints(this.context, false);
-                _.debounce(this.updateTargetSelection, 1000);
-            },
-
-            highlightedArchs: function(val, oldVal) {
-                this.drawPoints(this.context, false);
-            },
-
-            currentExpression: function(val, oldVal) {
-                let featureExpression = val;
-                this.$store.commit('clearHighlightedArchs');
-
-                // If filter expression is not empty, do something
-                let highlightedArchs = _.clone(this.highlightedArchs);
-                if (featureExpression !== '' || featureExpression) {
-                    this.plotData.forEach((point, index) => {
-                        highlightedArchs[index] = this.$store.state.filter.processFilterExpression(point, featureExpression, '&&');
-                    });
-                }
-                this.$store.commit('updateHighlightedArchs', highlightedArchs);
             }
         },
 

@@ -1,17 +1,17 @@
 import store from "../index";
 
 // Defines all algorithms Parameters and characteristics
-let algorithmsInfo = new Map();
+let algorithmsInfo = {};
 
 // Note that new algorithms must be included in the Option list of Anomaly Detection in './functionality-list.js'
-algorithmsInfo.set('none', {
+algorithmsInfo['none'] = {
     name: "No Algorithm has been selected"
-});
+};
 
-algorithmsInfo.set('ADWindowedStats', {
+algorithmsInfo['ADWindowedStats'] = {
     name: "Windowed Statistic Method",
     type: "UniVariate",
-    code: 'ADWindowedStats',
+    value: 'ADWindowedStats',
     parameters:[
         {name: "Window Parameter", variable: "w", defaultValue: 100, value: 100, varType:"int",
             description: "Fixes the number of observations before the data to be analyzed. \nA higher number implies the anomaly detected is an outlier in a more general context, while a smaller number will imply that the anomaly is local"},
@@ -22,12 +22,12 @@ algorithmsInfo.set('ADWindowedStats', {
         {description: "Time consuming: The method is lightweight, for each data point a "}
 
     ]
-});
-
-algorithmsInfo.set('SARIMAX_AD', {
+};
+// TODO at some point might eb interesting to implement a restore default setting button
+algorithmsInfo['SARIMAX_AD'] = {
     name: "Seasonal ARIMA + Exogenous Variables",
     type: "UniVariate",
-    code: 'SARIMAX_AD',
+    value: 'SARIMAX_AD',
     parameters:[
         {name: "Seasonality", variable: "seasonality", defaultValue: 24, value: 24, varType:"int",
             description: "Indicates the seasonality assumed for the data. This means that the data is considered " +
@@ -45,12 +45,12 @@ algorithmsInfo.set('SARIMAX_AD', {
             "number results on exponentially more calculation time, and might no significantly improve the prediction" +
             "results for anomaly detection. It is recommended not to exceed the default value"}
     ]
-});
+};
 
-algorithmsInfo.set('adaptiveKNN', {
+algorithmsInfo['adaptiveKNN'] = {
     name: 'Adaptive Kernel Density Based',
     type: "MultiVariate",
-    code: 'adaptiveKNN',
+    value: 'adaptiveKNN',
     parameters: [
         {name: "Number of Nearest Neighbors", variable: "k", defaultValue: 10, value: 10, varType: "int",
             description: "Data points considered to compute Kernel Radius."},
@@ -60,12 +60,12 @@ algorithmsInfo.set('adaptiveKNN', {
             description: "Represents the fraction of the data sampled to be used in the training sample, in big " +
             "dataSets this parameter is recommended to be set to small values. It must be between 0 and 1"}
     ]
-});
+};
 
-algorithmsInfo.set('iForest', {
+algorithmsInfo['iForest'] = {
     name: 'Isolation Forest',
     type: "MultiVariate",
-    code: 'iForest',
+    value: 'iForest',
     parameters: [
         {name: "Number of Trees", variable: "t", defaultValue: 20, value: 20, varType: "int",
             description: "Number of trees computed to set the isolation forest"},
@@ -74,20 +74,60 @@ algorithmsInfo.set('iForest', {
             "to be set to a value that make the number of data available for each tree around 150 samples. " +
             "It must be between 0 and 1"}
     ]
-});
+};
 
 // Defines all the implemented questions parameters
 // The parameters must be asked by Daphne in the
 // Or must be introduced directly on the question:
 // ... fixing max lag analyzed in 2000/ using 2000 as max lag analyzed
-let questionsInfo = new Map();
+let questionsInfo = {};
 
-questionsInfo.set('CheckSeasonality', {
+questionsInfo['CheckSeasonality'] = {
     name: 'Is there seasonality on the selected variable?',
     parameters: [
         {name: "Max lag analyzed", variable:"n", defaultValue: 100, value: 100, varType:"int"}
+    ],
+    parametersOptions: [], parametersCheckbox: []
+};
+
+questionsInfo['detectThreshold'] = {
+    name: 'Set the Threshold of the Anomaly Score from the selected methods to ...(0.9 as default) and show the anomalies detected',
+    parameters: [
+        {name: "threshold", variable:"threshold", defaultValue: 0.9, value: 0.9, varType:"float"}
+    ],
+    parametersOptions: [], parametersCheckbox: []
+};
+
+questionsInfo['detectNumber'] = {
+    name: 'Classify the ...(50 as default) most anomalous points as anomalies attending to the selected method Score',
+    parameters: [
+        {name: "Number of Anomalies", variable:"n", defaultValue: 50, value: 50, varType:"int"}
+    ],
+    parametersOptions: [], parametersCheckbox: []
+};
+
+questionsInfo['MethodsAgreement'] = {
+    name: 'Is there agreement with ...(Method 1) and ...(Method 2), in the variable selected (if UniVariate)?',
+    parameters: [
+        {name: 'Relation Radius: ', variable:"radius", defaultValue: 3, value: 3, varType:"int"}
+    ],
+    parametersOptions: [
+        {name: "Method 1", variable:"selectedAlgorithm", value: '', subIndex: 'One', type: "Algorithm"},
+        {name: "Method 2", variable:"selectedAlgorithm", value: '', subIndex: 'Two', type: "Algorithm"}
+    ],
+    parametersCheckbox: []
+};
+
+questionsInfo['Correlations'] = {
+    name: 'How correlated are the problem variables/ is the variable ...(selected variable)?',
+    parameters: [
+        {name: 'Highest correlations to Show: ', variable:"n", defaultValue: 5, value: 5, varType:"int"}
+    ],
+    parametersOptions: [],
+    parametersCheckbox: [
+        {name: 'Analyze all the variables', variable:'analyzeAllVariables', defaultValue: true, value: true}
     ]
-});
+};
 
 // Defines the Name given to the anomaly score name from the algorithms output
 let anomalyScoreName = "anomalyScore";
@@ -109,6 +149,7 @@ const state = {
     algorithmParameters: [],
     numberAnomalies: 0, // Todo check how to compute this
     detectedOneVarAnomalies:{},
+    detectedMultiVarAnomalies:{},
     multiVariateAnomalyScores:{},
     websocketAD: null,
 
@@ -118,7 +159,10 @@ const state = {
     // Variables related to the question asked
     dummyDrawAnomalies: false, // Switch to watch the changes of the detectedOneVarAnomalies
     questionParameters:[],
-    writtenResponse:[]  // Contains the response of the questions organized in three points(intro, bulletpoints, postdata) \\ todo change this to allow multiple object of these kind on the written response
+    questionParametersOption: [],
+    questionParametersCheckbox: [],
+    writtenResponse:[],  // Contains the response of the questions organized in three points(intro, bulletpoints, postdata)
+    questionExecuted: true
 };
 
 const getters = {
@@ -146,6 +190,10 @@ const getters = {
         return state.anomalyVariablesCorrelation
     },
 
+    getQuestionList (state){
+        return questionsInfo;
+    },
+
     getAnomalyVariables(state) {
         return state.anomalyVariables;
     },
@@ -158,24 +206,41 @@ const getters = {
         return state.detectedOneVarAnomalies;
     },
 
+    getDetectedMultiVarAnomalies(state){
+        return state.detectedMultiVarAnomalies;
+    },
+
     getNumberAnomalies(state){
         return state.numberAnomalies
     },
 
     getAlgorithmName: (state) => (Algorithm) => {
-        return algorithmsInfo.get(Algorithm).name
+        return algorithmsInfo[Algorithm].name
     },
 
     isAlgorithmMultiVariate: (state) => (Algorithm) => {
-        return algorithmsInfo.get(Algorithm).type === "MultiVariate"
+        return algorithmsInfo[Algorithm].type === "MultiVariate"
     },
 
     getAlgorithmParameters: (state) => (Algorithm) => {
-        return algorithmsInfo.get(Algorithm).parameters;
+        return algorithmsInfo[Algorithm].parameters;
     },
 
     getQuestionParameters: (state) => (Question) => {
-        return questionsInfo.get(Question).parameters;
+        return questionsInfo[Question].parameters;
+    },
+
+    getQuestionParametersOption: (state) => (Question) => {
+        return questionsInfo[Question].parametersOptions;
+    },
+
+    getQuestionParametersCheckbox: (state) => (Question) => {
+        return questionsInfo[Question].parametersCheckbox;
+    },
+
+
+    getOptionsListAlgorithm (state){
+        return algorithmsInfo;
     },
 
     getDummyDrawAnomalies(state){
@@ -188,6 +253,10 @@ const getters = {
 
     getWrittenResponse(state){
         return state.writtenResponse;
+    },
+
+    getQuestionExecuted(state){
+        return state.questionExecuted;
     }
 };
 
@@ -376,11 +445,17 @@ const actions = {
     async answerAnomalyQuestion({commit, getters, state}, questionCode) {
         try{
             // commit("updateIsRunning", true); // Todo give the user feedback on the analysis execution
-            // Adds the datax
-            let reqData = {data: JSON.stringify(getters.getAnomalyProblemData)};
+            // Adds the data
+            let reqData = {
+                data: JSON.stringify(getters.getAnomalyProblemData),
+                variable: getters.getVariableChosen,
+                selectedMultiVarAlgorithm: getters.getMultiVarAlgorithmSelected,
+                anomalyScore: getters.getMultiVariateAnomalyScores,
+                detectedOneVarAnomalies: getters.getDetectedOneVarAnomalies,
+                detectedMultiVarAnomalies: getters.getDetectedMultiVarAnomalies,
+                correlation: getters.getAnomalyVariablesCorrelation
+            };
 
-            // Adds the Variable we are focusing on
-            reqData['variable'] = getters.getVariableChosen;
 
             // Add the parameters to the request
             state.questionParameters.forEach((parameter) => {
@@ -392,6 +467,18 @@ const actions = {
                 }
             });
 
+            state.questionParametersOption.forEach((parameter) => {
+                reqData[parameter.variable + parameter.subIndex] = parameter.value;
+                if (parameter.type === "Algorithm"){
+                    reqData["typeAlgorithm" + parameter.subIndex] = algorithmsInfo[parameter.value].type;
+                }
+            });
+
+            state.questionParametersCheckbox.forEach((parameter) => {
+                reqData[parameter.variable] = parameter.value;
+            });
+
+            console.log(reqData);
             console.log("Resolving Request to " + questionCode + " question");
             let dataResponse = await fetch(
                 'api/anomaly/analysis/' + questionCode,
@@ -407,7 +494,6 @@ const actions = {
 
             if (dataResponse.ok) {
                 let data = await dataResponse.json();
-                console.log(data);
                 if (data.hasOwnProperty('error')) {
                     console.error('Internal Algorithm error: ' + data['error']);
                     // TODO: Implement this to show it on the web
@@ -418,7 +504,11 @@ const actions = {
                     if(data.hasOwnProperty('writtenResponse')){
                         commit("updateWrittenResponse", data['writtenResponse']);
                     }
-                    // Todo do the same to responses related with setting a threshold
+                    if(data.hasOwnProperty('detectedAnomalies')){
+                        commit('updateDetectedMultiVarAnomalies', JSON.parse(data['detectedAnomalies']));
+                    }
+                    commit('switchDrawAnomalies');
+                    commit('updateQuestionExecuted', true);
                 }
             }
             else {
@@ -461,25 +551,43 @@ const mutations = {
     initializeAlgorithmsResultVectors(state){
         state.anomalyVariables.forEach((variable)=>{
             state.detectedOneVarAnomalies[variable] = {};
-        });
-        state.multiVariateAnomalyScores['none'] = [];
-        algorithmsInfo.forEach((algorithm)=>{
-            if(algorithm.type === 'MultiVariate'){
-                state.multiVariateAnomalyScores[algorithm.code] = [];
+            for (var algorithm in algorithmsInfo){
+                if(algorithmsInfo[algorithm].type === 'UniVariate'){
+                    state.detectedOneVarAnomalies[variable][algorithmsInfo[algorithm].value] = [];
+                }
             }
         });
+        state.multiVariateAnomalyScores['none'] = [];
+        for (var algorithm in algorithmsInfo){
+            if(algorithmsInfo[algorithm].type === 'MultiVariate'){
+                state.multiVariateAnomalyScores[algorithmsInfo[algorithm].value] = [];
+                state.detectedMultiVarAnomalies[algorithmsInfo[algorithm].value] = [];
+            }
+        }
     },
 
     updateDetectedOneVarAnomalies(state, updateParameters){
         state.detectedOneVarAnomalies[updateParameters.variable][updateParameters.algorithm] = updateParameters.anomalies;
     },
 
+    updateDetectedMultiVarAnomalies(state, detectedAnomalies){
+        state.detectedMultiVarAnomalies[state.multiVarAlgorithmSelected] = detectedAnomalies;
+    },
+
     updateAlgorithmParameters(state, algorithmParameters){
-        state.algorithmParameters = algorithmParameters
+        state.algorithmParameters = algorithmParameters;
     },
 
     updateQuestionParameters(state, questionParameters) {
-        state.questionParameters = questionParameters
+        state.questionParameters = questionParameters;
+    },
+
+    updateQuestionParametersOption(state, questionParametersOption) {
+        state.questionParametersOption = questionParametersOption;
+    },
+
+    updateQuestionParametersCheckbox(state, questionParametersCheckbox) {
+        state.questionParametersCheckbox= questionParametersCheckbox;
     },
 
     updateWrittenResponse(state, writtenResponse) {
@@ -502,6 +610,10 @@ const mutations = {
     updateVariableChosen(state, variable) {
         state.variableChosen = variable;
     },
+
+    updateQuestionExecuted(state, status){
+        state.questionExecuted = status;
+    }
 
 };
 

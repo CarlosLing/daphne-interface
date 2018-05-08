@@ -10,6 +10,7 @@ const state = {
         oneVariableStroke: 'rgba(50,50,50,1)',
         multiVariableStroke: 'rgba(30,30,75,0)',
         oneVariableAnomaly: 'rgba(255,0,0,0.5)',
+        multiVariableAnomaly: 'rgba(200,0,200,0.5)',
         indicatorStroke: 'rgba(200,200,200,1)',
         clickedData: 'rgba(255,200,200,1)',
         selectedData: 'rgba(100,100,120,0.5)'
@@ -91,10 +92,12 @@ const mutations = {
             state.colorAnomalyPlot.oneVariableStroke = 'rgba(50,50,50,1)';
             state.colorAnomalyPlot.multiVariableStroke = 'rgba(30,30,75,0)';
             state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,0,0,0.5)';
+            state.colorAnomalyPlot.multiVariableAnomaly= 'rgba(200,0,200,0)';
         }else if(state.activePlotTab === "multiVariable"){
             state.colorAnomalyPlot.oneVariableStroke = 'rgba(50,50,50,0)';
             state.colorAnomalyPlot.multiVariableStroke = 'rgba(30,30,75,1)';
             state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,0,0,0)';
+            state.colorAnomalyPlot.multiVariableAnomaly = 'rgba(200,0,200,0.5)';
         }
     },
 
@@ -124,6 +127,9 @@ const mutations = {
             }
             if (state.colorAnomalyPlot.oneVariableAnomaly === 'rgba(255,0,0,0)') {
                 state.colorAnomalyPlot.oneVariableAnomaly = 'rgba(255,150,150,0.5)'
+            }
+            if (state.colorAnomalyPlot.multiVariableAnomaly === 'rgba(200,0,200,0)') {
+                state.colorAnomalyPlot.multiVariableAnomaly = 'rgba(255,150,255,0.5)'
             }
         }
     },

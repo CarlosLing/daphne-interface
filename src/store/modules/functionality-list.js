@@ -43,7 +43,11 @@ functionalityTypes.set('AnomalyQuestions', {
     optionsList: [
         // Here we will be listing the questions available for anomaly detection
         {name: "", value: ""},
-        {name: "Is there seasonality on the selected variable?", value: "CheckSeasonality"}
+        {name: "Is there seasonality on the selected variable?", value: "CheckSeasonality"},
+        {name: "Set the Threshold of the Anomaly Score from the selected methods to ...(0.9 as default) and show the " +
+            "anomalies detected", value: "detectThreshold"},
+        {name: "Classify the ...(50 as default) most anomalous points as anomalies attending to the selected method" +
+            " Score", value: "detectNumber"}
     ]
 });
 
