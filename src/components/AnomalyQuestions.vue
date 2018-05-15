@@ -46,6 +46,11 @@
                         <input type="checkbox" v-model="parameter.value">{{parameter.name}}
                     </li>
                 </ul>
+                <ul v-if="questionListVariables">
+                    <li v-for="variable in listVariables">
+                        <input type="checkbox" v-model="variable.value">{{variable.name}}
+                    </li>
+                </ul>
             </div>
         </div>
     </div>
@@ -62,10 +67,12 @@
             return {
                 // The question parameters are the other inputs of the apis which are not a variable nor the data
                 questionParameters: '',
-                questionParametersOption: '',
-                questionParametersCheckbox: '',
-                selectedQuestion: ''
-
+                questionParametersOption: [],
+                questionParametersCheckbox: [],
+                questionListVariables: '',
+                selectedQuestion: '',
+                listVariables: [],
+                listSelectedVariables: []
             }
         },
 
@@ -77,14 +84,16 @@
                 getQuestionParameters: 'getQuestionParameters',
                 getQuestionParametersOption: 'getQuestionParametersOption',
                 getQuestionParametersCheckbox: 'getQuestionParametersCheckbox',
+                getQuestionListVariables: 'getQuestionListVariables',
                 writtenResponse: 'getWrittenResponse',
                 questionExecuted: 'getQuestionExecuted',
-                getOptionsListAlgorithm: 'getOptionsListAlgorithm'
+                getOptionsListAlgorithm: 'getOptionsListAlgorithm',
+                anomalyVariables: 'getAnomalyVariables'
             }),
             dataSetOptions() {
                 return this.$store.getters.getQuestionList;
             },
-            parameterOptions() {
+            parameterOptions() { // In case other lists such as variables names such be added
                 return {
                     Algorithm: this.getOptionsListAlgorithm
                 };
@@ -96,16 +105,34 @@
                 this.questionParameters = this.getQuestionParameters(this.selectedQuestion);
                 this.questionParametersOption = this.getQuestionParametersOption(this.selectedQuestion);
                 this.questionParametersCheckbox = this.getQuestionParametersCheckbox(this.selectedQuestion);
-                this.$store.commit('updateQuestionExecuted', false)
+                this.questionListVariables = this.getQuestionListVariables(this.selectedQuestion);
+                this.listVariables = [];
+                this.anomalyVariables.forEach((variable) =>{
+                    this.listVariables.push({name: variable, value: false})
+                });
+                this.$store.commit('updateQuestionExecuted', false);
             },
 
             answerAnomalyQuestion(){
+                if (this.questionListVariables){
+                    this.listVariables.forEach((variable)=>{
+                        if (variable.value){this.listSelectedVariables.push(variable.name)}
+                    });
+                }
                 this.$store.commit('updateQuestionParameters', this.questionParameters);
                 this.$store.commit('updateQuestionParametersOption', this.questionParametersOption);
                 this.$store.commit('updateQuestionParametersCheckbox', this.questionParametersCheckbox);
+                this.$store.commit('updateListSelectedVariables', this.listSelectedVariables);
                 this.$store.dispatch('answerAnomalyQuestion', this.selectedQuestion);
             }
+        },
+
+        watch: {
+            questionExecuted: function(val, oldVal) {
+                this.$store.commit('updateNumberAnomalies');
+            }
         }
+
     }
 
 

@@ -18,16 +18,20 @@
             <button class="button" id="apply-ADAlgorithm-button" @click="runAlgorithm" v-bind:class="{ 'is-loading': isLoading }">Apply Anomaly Detection</button>
         </div>
         <div class="panel-block functionality">
-            <div class="content">
-                <ul v-if="algorithmsParameters.length">
+            <div class="content" v-if="oneVarAlgorithm">
+                <input type="checkbox" v-model="applyToAllVariables"> <b>Apply to all Variables</b>
+            </div>
+            <div class="content" v-if="algorithmsParameters.length">
+                <p><u><b>Model Parameters:</b></u></p>
+                <ul>
                     <li v-for="parameter in algorithmsParameters">
                         {{parameter.variable}}:
                         <input v-model="parameter.value" placeholder="Introduce the Parameter Value">
                         <br> <b>{{parameter.name}}</b>: {{parameter.description}}
                     </li>
                 </ul>
-                <p v-else>Choose one of the available Anomaly Detection  Methods</p>
             </div>
+            <div class="content" v-else><p>Choose one of the available Anomaly Detection  Methods</p></div>
         </div>
     </div>
 </template>
@@ -41,6 +45,8 @@
             return {
                 selectedVariable: '',
                 selectedAlgorithm: '',
+                oneVarAlgorithm: false,
+                applyToAllVariables: false,
 
                 algorithmsParameters: [],
                 test: ""
@@ -65,8 +71,10 @@
                 this.algorithmsParameters = this.getAlgorithmParameters(this.selectedAlgorithm);
                 if (this.isAlgorithmMultiVariate(this.selectedAlgorithm)){
                     this.$store.commit('updateMultiVarAlgorithmSelected', this.selectedAlgorithm);
+                    this.oneVarAlgorithm = false;
                 }else{
                     this.$store.commit('updateOneVarAlgorithmSelected', this.selectedAlgorithm);
+                    this.oneVarAlgorithm = true;
                 }
             },
             selectVariable() {
@@ -74,8 +82,28 @@
             },
             runAlgorithm(){
                 this.$store.commit('updateAlgorithmParameters', this.algorithmsParameters);
-                this.$store.dispatch('detectAnomalies', this.selectedAlgorithm).then(()=>{this.$store.commit('switchDrawAnomalies')});
+                if (this.applyToAllVariables && this.oneVarAlgorithm){
+                    this.variableList.forEach((variable) => {
+                        this.$store.commit("updateVariableChosen", variable);
+                        this.$store.dispatch('detectAnomalies', this.selectedAlgorithm).then(()=>{this.$store.commit('switchDrawAnomalies')});
+                    });
+                    this.$store.commit("updateVariableChosen", this.selectedVariable);
+                } else {
+                    this.$store.dispatch('detectAnomalies', this.selectedAlgorithm).then(()=>{this.$store.commit('switchDrawAnomalies')});
+                }
 
+            }
+        },
+
+        watch: {
+            selectedAlgorithm: function(val, oldVal) {
+                this.$store.commit('updateNumberAnomalies');
+            },
+            selectedVariable: function(val, oldVal) {
+                this.$store.commit('updateNumberAnomalies');
+            },
+            isLoading: function(val, oldVal) {
+                this.$store.commit('updateNumberAnomalies');
             }
         }
     }

@@ -5,7 +5,8 @@ let algorithmsInfo = {};
 
 // Note that new algorithms must be included in the Option list of Anomaly Detection in './functionality-list.js'
 algorithmsInfo['none'] = {
-    name: "No Algorithm has been selected"
+    name: "No Algorithm has been selected",
+    value: 'none'
 };
 
 algorithmsInfo['ADWindowedStats'] = {
@@ -23,6 +24,7 @@ algorithmsInfo['ADWindowedStats'] = {
 
     ]
 };
+// Note that Default value is never used, although it migh be interesting to use it if the below to do is implemented
 // TODO at some point might eb interesting to implement a restore default setting button
 algorithmsInfo['SARIMAX_AD'] = {
     name: "Seasonal ARIMA + Exogenous Variables",
@@ -80,6 +82,7 @@ algorithmsInfo['iForest'] = {
 // The parameters must be asked by Daphne in the
 // Or must be introduced directly on the question:
 // ... fixing max lag analyzed in 2000/ using 2000 as max lag analyzed
+// Todo The questions might be separated into different files for a better understanding Separate Algorithm and Question logic
 let questionsInfo = {};
 
 questionsInfo['CheckSeasonality'] = {
@@ -87,7 +90,7 @@ questionsInfo['CheckSeasonality'] = {
     parameters: [
         {name: "Max lag analyzed", variable:"n", defaultValue: 100, value: 100, varType:"int"}
     ],
-    parametersOptions: [], parametersCheckbox: []
+    parametersOptions: [], parametersCheckbox: [], listVariables: false
 };
 
 questionsInfo['detectThreshold'] = {
@@ -95,7 +98,11 @@ questionsInfo['detectThreshold'] = {
     parameters: [
         {name: "threshold", variable:"threshold", defaultValue: 0.9, value: 0.9, varType:"float"}
     ],
-    parametersOptions: [], parametersCheckbox: []
+    parametersOptions: [],
+    parametersCheckbox: [
+        {name: "Use only the selected data", variable: "useSelectedData", defaultValue: false, value: false}
+    ],
+    listVariables: false
 };
 
 questionsInfo['detectNumber'] = {
@@ -103,30 +110,56 @@ questionsInfo['detectNumber'] = {
     parameters: [
         {name: "Number of Anomalies", variable:"n", defaultValue: 50, value: 50, varType:"int"}
     ],
-    parametersOptions: [], parametersCheckbox: []
+    parametersOptions: [],
+    parametersCheckbox: [
+        {name: "Use only the selected data", variable: "useSelectedData", defaultValue: false, value: false}],
+    listVariables: false
 };
 
 questionsInfo['MethodsAgreement'] = {
     name: 'Is there agreement with ...(Method 1) and ...(Method 2), in the variable selected (if UniVariate)?',
     parameters: [
-        {name: 'Relation Radius: ', variable:"radius", defaultValue: 3, value: 3, varType:"int"}
+        {name: 'Relation Radius', variable:"radius", defaultValue: 3, value: 3, varType:"int"}
     ],
     parametersOptions: [
         {name: "Method 1", variable:"selectedAlgorithm", value: '', subIndex: 'One', type: "Algorithm"},
         {name: "Method 2", variable:"selectedAlgorithm", value: '', subIndex: 'Two', type: "Algorithm"}
     ],
-    parametersCheckbox: []
+    parametersCheckbox: [
+        {name: "Use only the selected data", variable: "useSelectedData", defaultValue: false, value: false}],
+    listVariables: false
 };
 
 questionsInfo['Correlations'] = {
     name: 'How correlated are the problem variables/ is the variable ...(selected variable)?',
     parameters: [
-        {name: 'Highest correlations to Show: ', variable:"n", defaultValue: 5, value: 5, varType:"int"}
+        {name: 'Highest correlations to Show', variable:"n", defaultValue: 5, value: 5, varType:"int"}
     ],
     parametersOptions: [],
     parametersCheckbox: [
         {name: 'Analyze all the variables', variable:'analyzeAllVariables', defaultValue: true, value: true}
-    ]
+    ],
+    listVariables: false
+};
+
+questionsInfo['CountAnomalies'] = {
+    name: 'Which are the (n) variables with the higher number of anomalies in the selected region?',
+    parameters: [
+        {name: 'Number of variables shown', variable:"n", defaultValue: 3, value: 3, varType:"int"}
+    ],
+    parametersOptions: [],
+    parametersCheckbox: [
+        {name: 'Analyze all the series', variable:'analyzeAllSeries', defaultValue: false, value: false}
+    ],
+    listVariables: false
+};
+
+questionsInfo['RemoveVariables'] = {
+    name: 'Remove the selected variables from the analysis',
+    parameters: [],
+    parametersOptions: [],
+    parametersCheckbox: [],
+    listVariables: true
 };
 
 // Defines the Name given to the anomaly score name from the algorithms output
@@ -147,11 +180,12 @@ const state = {
 
     // Variables related to the AD Algorithm
     algorithmParameters: [],
-    numberAnomalies: 0, // Todo check how to compute this
+    numberAnomaliesUni: 0, // Todo check how to compute this
+    numberAnomaliesMulti: 0, // Todo check how to compute this
     detectedOneVarAnomalies:{},
     detectedMultiVarAnomalies:{},
     multiVariateAnomalyScores:{},
-    websocketAD: null,
+    websocketAD: {},
 
     oneVarAlgorithmSelected: 'none',
     multiVarAlgorithmSelected: 'none',
@@ -161,6 +195,7 @@ const state = {
     questionParameters:[],
     questionParametersOption: [],
     questionParametersCheckbox: [],
+    listSelectedVariables: [],
     writtenResponse:[],  // Contains the response of the questions organized in three points(intro, bulletpoints, postdata)
     questionExecuted: true
 };
@@ -190,7 +225,7 @@ const getters = {
         return state.anomalyVariablesCorrelation
     },
 
-    getQuestionList (state){
+    getQuestionList (){
         return questionsInfo;
     },
 
@@ -210,36 +245,43 @@ const getters = {
         return state.detectedMultiVarAnomalies;
     },
 
-    getNumberAnomalies(state){
-        return state.numberAnomalies
+    getNumberAnomaliesUni(state){
+        return state.numberAnomaliesUni;
     },
 
-    getAlgorithmName: (state) => (Algorithm) => {
+    getNumberAnomaliesMulti(state){
+        return state.numberAnomaliesMulti;
+    },
+
+    getAlgorithmName: () => (Algorithm) => {
         return algorithmsInfo[Algorithm].name
     },
 
-    isAlgorithmMultiVariate: (state) => (Algorithm) => {
+    isAlgorithmMultiVariate: () => (Algorithm) => {
         return algorithmsInfo[Algorithm].type === "MultiVariate"
     },
 
-    getAlgorithmParameters: (state) => (Algorithm) => {
+    getAlgorithmParameters: () => (Algorithm) => {
         return algorithmsInfo[Algorithm].parameters;
     },
 
-    getQuestionParameters: (state) => (Question) => {
+    getQuestionParameters: () => (Question) => {
         return questionsInfo[Question].parameters;
     },
 
-    getQuestionParametersOption: (state) => (Question) => {
+    getQuestionParametersOption: () => (Question) => {
         return questionsInfo[Question].parametersOptions;
     },
 
-    getQuestionParametersCheckbox: (state) => (Question) => {
+    getQuestionParametersCheckbox: () => (Question) => {
         return questionsInfo[Question].parametersCheckbox;
     },
 
+    getQuestionListVariables: () => (Question) => {
+        return questionsInfo[Question].listVariables ;
+    },
 
-    getOptionsListAlgorithm (state){
+    getOptionsListAlgorithm (){
         return algorithmsInfo;
     },
 
@@ -271,7 +313,6 @@ const actions = {
 
             // Adds the Variable we are focusing on
             reqData['variable'] = getters.getVariableChosen;
-
             // Add the parameters to the request
             state.algorithmParameters.forEach((parameter) => {
                 if (parameter.varType === "int") {
@@ -312,7 +353,7 @@ const actions = {
                         }
                         else {
                             commit("updateDetectedOneVarAnomalies", {
-                                'variable': getters.getVariableChosen,
+                                'variable': reqData['variable'],
                                 'algorithm': Method,
                                 'anomalies': JSON.parse(data)
                             });
@@ -356,7 +397,7 @@ const actions = {
                             }
                             else {
                                 commit("updateDetectedOneVarAnomalies", {
-                                    'variable': getters.getVariableChosen,
+                                    'variable': reqData['variable'],
                                     'algorithm': Method,
                                     'anomalies': JSON.parse(data)
                                 });
@@ -364,12 +405,12 @@ const actions = {
                             commit("switchDrawAnomalies");
                         }
                     };
-                    store.commit('setWebsocketAD', websocket);
+                    store.commit('setWebsocketAD', {websocket: websocket, variable: reqData['variable']});
 
                 });
                 // On the answer of the websocket
                 websocketPromise.then(() => {
-                    state.websocketAD.send(JSON.stringify(reqData));
+                    state.websocketAD[reqData['variable']].send(JSON.stringify(reqData));
                 });
             }
         }
@@ -453,9 +494,10 @@ const actions = {
                 anomalyScore: getters.getMultiVariateAnomalyScores,
                 detectedOneVarAnomalies: getters.getDetectedOneVarAnomalies,
                 detectedMultiVarAnomalies: getters.getDetectedMultiVarAnomalies,
-                correlation: getters.getAnomalyVariablesCorrelation
+                correlation: getters.getAnomalyVariablesCorrelation,
+                selectedData: getters.getSelectedData,
+                listSelectedVariables: state.listSelectedVariables
             };
-
 
             // Add the parameters to the request
             state.questionParameters.forEach((parameter) => {
@@ -478,7 +520,7 @@ const actions = {
                 reqData[parameter.variable] = parameter.value;
             });
 
-            console.log(reqData);
+            // Resolve the request
             console.log("Resolving Request to " + questionCode + " question");
             let dataResponse = await fetch(
                 'api/anomaly/analysis/' + questionCode,
@@ -492,6 +534,7 @@ const actions = {
                 }
             );
 
+            // Process response
             if (dataResponse.ok) {
                 let data = await dataResponse.json();
                 if (data.hasOwnProperty('error')) {
@@ -499,13 +542,18 @@ const actions = {
                     // TODO: Implement this to show it on the web
                 }
                 else {
-                    // commit("updateIsRunning", false);
                     // Commits the response to be shown in Daphne interface
                     if(data.hasOwnProperty('writtenResponse')){
                         commit("updateWrittenResponse", data['writtenResponse']);
                     }
                     if(data.hasOwnProperty('detectedAnomalies')){
                         commit('updateDetectedMultiVarAnomalies', JSON.parse(data['detectedAnomalies']));
+                    }
+                    if(data.hasOwnProperty('data')){
+                        commit('updateAnomalyData', data['data']['data']);
+                        commit('updateAnomalyVariables', data['data']['variables']);
+                        commit('updateAnomalyVariablesCorrelation', data['data']['correlation']);
+                        commit('initializeAlgorithmsResultVectors');
                     }
                     commit('switchDrawAnomalies');
                     commit('updateQuestionExecuted', true);
@@ -549,17 +597,20 @@ const mutations = {
     },
 
     initializeAlgorithmsResultVectors(state){
+        state.detectedOneVarAnomalies = {};
         state.anomalyVariables.forEach((variable)=>{
             state.detectedOneVarAnomalies[variable] = {};
             for (var algorithm in algorithmsInfo){
-                if(algorithmsInfo[algorithm].type === 'UniVariate'){
+                if(algorithmsInfo[algorithm].type === 'UniVariate' || algorithm === 'none'){
                     state.detectedOneVarAnomalies[variable][algorithmsInfo[algorithm].value] = [];
                 }
             }
         });
+        state.multiVariateAnomalyScores = {};
+        state.detectedMultiVarAnomalies = {};
         state.multiVariateAnomalyScores['none'] = [];
         for (var algorithm in algorithmsInfo){
-            if(algorithmsInfo[algorithm].type === 'MultiVariate'){
+            if(algorithmsInfo[algorithm].type === 'MultiVariate' || algorithm === 'none'){
                 state.multiVariateAnomalyScores[algorithmsInfo[algorithm].value] = [];
                 state.detectedMultiVarAnomalies[algorithmsInfo[algorithm].value] = [];
             }
@@ -599,8 +650,8 @@ const mutations = {
         state.multiVariateAnomalyScores[updateParameters.algorithm] = updateParameters.anomalyScore;
     },
 
-    setWebsocketAD(state,websocket) {
-        state.websocketAD = websocket;
+    setWebsocketAD(state, dataWS) {
+        state.websocketAD[dataWS['variable']] = dataWS['websocket'];
     },
 
     switchDrawAnomalies(state){
@@ -613,6 +664,15 @@ const mutations = {
 
     updateQuestionExecuted(state, status){
         state.questionExecuted = status;
+    },
+
+    updateListSelectedVariables(state, listSelectedVariables){
+        state.listSelectedVariables = listSelectedVariables;
+    },
+
+    updateNumberAnomalies(state){
+        state.numberAnomaliesUni = state.detectedOneVarAnomalies[state.variableChosen][state.oneVarAlgorithmSelected].length;
+        state.numberAnomaliesMulti = state.detectedMultiVarAnomalies[state.multiVarAlgorithmSelected].length;
     }
 
 };

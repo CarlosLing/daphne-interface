@@ -3,9 +3,9 @@
         <section class="panel">
             <p class="panel-heading">
                 UniVariate Algorithm: {{getAlgorithmName(oneVarAlgorithmSelected)}} |
-                Anomalies detected: {{numberAnomalies}} |.|
+                Anomalies detected: {{numberAnomaliesUni}} |.|
                 MultiVariate Algorithm: {{getAlgorithmName(multiVarAlgorithmSelected)}} |
-                Anomalies detected: {{numberAnomalies}}
+                Anomalies detected: {{numberAnomaliesMulti}}
             </p>
             <div>
                 <div class="tabs is centered" id="plot-tabs">
@@ -142,7 +142,8 @@
                 colorMap: 'getColorMap',
                 numPoints: 'getNumPoints',
                 websocket: 'getWebsocket',
-                numberAnomalies: 'getNumberAnomalies'
+                numberAnomaliesUni: 'getNumberAnomaliesUni',
+                numberAnomaliesMulti: 'getNumberAnomaliesMulti'
             }),
 
             plotWidth() {
@@ -328,6 +329,128 @@
 
                 // Might be interesting to allow to select points in and show their degrees of anomaly
                 canvas.on('click.inspection', function() { self.canvasClick(); });
+
+                this.configureSelectionMode();
+            },
+
+            configureSelectionMode(){
+                let margin = this.mainPlotParams.margin;
+                let width  = this.mainPlotParams.width;
+                let height = this.mainPlotParams.height;
+
+                if (this.selectionMode === 'zoom-pan') { // Zoom
+                    d3.select('#main-plot').select('svg')
+                        .on('mousedown.modes',null)
+                        .on('mousemove.modes',null)
+                        .on('mouseup.modes',null)
+                        .call(this.zoom);
+
+                    d3.select('#main-plot').selectAll('canvas')
+                        .on('mousedown.modes',null)
+                        .on('mousemove.modes',null)
+                        .on('mouseup.modes.modes',null)
+                        .call(this.zoom);
+                }
+                else {
+                    let svg = d3.select('#main-plot').select('svg')
+                        .on('.zoom', null);
+
+                    let canvases = d3.select('#main-plot').selectAll('canvas')
+                        .on('.zoom', null);
+
+                    let self = this;
+                    let oldSelected  = self.selectedData.slice();
+
+                    function selectMousedown() {
+                        let mousePos = d3.mouse(this);
+                        svg.append('rect')
+                            .attrs(
+                                {
+                                    rx     : 0,
+                                    ry     : 0,
+                                    class  : 'selection',
+                                    x      : mousePos[0],
+                                    y      : 0,
+                                    width  : 0,
+                                    height : 0,
+                                    x0     : mousePos[0],
+                                    y0     : 0,
+                                })
+                            .style('background-color', '#EEEEEE')
+                            .style('opacity', 0.18)
+                            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+                        oldSelected = self.selectedData.slice();
+                    }
+
+                    function selectMousemove() {
+                        let selection = svg.select('rect.selection');
+                        if (!selection.empty()) {
+                            let mousePos = d3.mouse(this);
+
+                            // Creates the selection box
+                            let box = {
+                                x      : parseInt(selection.attr('x'), 10),
+                                y      : parseInt(selection.attr('y'), 10),
+                                x0     : parseInt(selection.attr('x0'), 10),
+                                y0     : parseInt(selection.attr('y0'), 10),
+                                width  : parseInt(selection.attr('width'), 10),
+                                height : parseInt(selection.attr('height'), 10)
+                            };
+
+                            let move = {
+                                x : mousePos[0] - box.x0
+                            };
+
+                            if (move.x < 0) {
+                                box.x = box.x0 + move.x;
+                            }
+                            else {
+                                box.x = box.x0;
+                            }
+
+                            box.width = Math.abs(move.x);
+                            box.height = self.plotHeight;
+
+                            selection.attrs(box);
+
+                            let newSelectedData = self.selectedData.slice();
+
+                            if (self.selectionMode === 'drag-select') { // Make selection
+                                self.anomalyProblemData.forEach((point, index) => {
+                                    let tx = self.transform.applyX(self.preMappedX[index]);
+                                    newSelectedData[index] = (tx >= box.x) && (tx <= (box.x + box.width));
+                                    newSelectedData[index] = newSelectedData[index] || oldSelected [index];
+                                });
+                            }
+                            else {  // De-select
+                                self.anomalyProblemData.forEach((point, index) => {
+                                    let tx = self.transform.applyX(self.preMappedX[index]);
+                                    newSelectedData[index] = !(tx >= box.x && tx <= box.x + box.width);
+                                    newSelectedData[index] = newSelectedData[index] && oldSelected [index];
+                                });
+                            }
+
+                            self.$store.commit('updateSelectedData', newSelectedData);
+
+                            // console.log(newSelectedData);
+
+
+                        }
+                    }
+
+                    function selectMouseup() {
+                        // remove selection frame
+                        svg.selectAll('rect.selection').remove();
+                    }
+
+                    svg.on('mousedown.modes', selectMousedown)
+                        .on('mousemove.modes', selectMousemove)
+                        .on('mouseup.modes', selectMouseup);
+
+                    canvases.on('mousedown.modes', selectMousedown)
+                        .on('mousemove.modes', selectMousemove)
+                        .on('mouseup.modes', selectMouseup);
+                }
             },
 
             drawData(context) { // We take advantage of passing through all the points to tell if the mouse is over any point
@@ -527,123 +650,7 @@
 
 
             selectionMode: function(val, oldVal) {
-                let margin = this.mainPlotParams.margin;
-                let width  = this.mainPlotParams.width;
-                let height = this.mainPlotParams.height;
-
-                if (this.selectionMode === 'zoom-pan') { // Zoom
-                    d3.select('#main-plot').select('svg')
-                        .on('mousedown.modes',null)
-                        .on('mousemove.modes',null)
-                        .on('mouseup.modes',null)
-                        .call(this.zoom);
-
-                    d3.select('#main-plot').selectAll('canvas')
-                        .on('mousedown.modes',null)
-                        .on('mousemove.modes',null)
-                        .on('mouseup.modes.modes',null)
-                        .call(this.zoom);
-                }
-                else {
-                    let svg = d3.select('#main-plot').select('svg')
-                        .on('.zoom', null);
-
-                    let canvases = d3.select('#main-plot').selectAll('canvas')
-                        .on('.zoom', null);
-
-                    let self = this;
-                    let oldSelected  = self.selectedData.slice();
-
-                    function selectMousedown() {
-                        let mousePos = d3.mouse(this);
-                        svg.append('rect')
-                            .attrs(
-                                {
-                                    rx     : 0,
-                                    ry     : 0,
-                                    class  : 'selection',
-                                    x      : mousePos[0],
-                                    y      : 0,
-                                    width  : 0,
-                                    height : 0,
-                                    x0     : mousePos[0],
-                                    y0     : 0,
-                                })
-                            .style('background-color', '#EEEEEE')
-                            .style('opacity', 0.18)
-                            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
-                        oldSelected = self.selectedData.slice();
-                    }
-
-                    function selectMousemove() {
-                        let selection = svg.select('rect.selection');
-                        if (!selection.empty()) {
-                            let mousePos = d3.mouse(this);
-
-                            // Creates the selection box
-                            let box = {
-                                x      : parseInt(selection.attr('x'), 10),
-                                y      : parseInt(selection.attr('y'), 10),
-                                x0     : parseInt(selection.attr('x0'), 10),
-                                y0     : parseInt(selection.attr('y0'), 10),
-                                width  : parseInt(selection.attr('width'), 10),
-                                height : parseInt(selection.attr('height'), 10)
-                            };
-
-                            let move = {
-                                x : mousePos[0] - box.x0
-                            };
-
-                            if (move.x < 0) {
-                                box.x = box.x0 + move.x;
-                            }
-                            else {
-                                box.x = box.x0;
-                            }
-
-                            box.width = Math.abs(move.x);
-                            box.height = self.plotHeight;
-
-                            selection.attrs(box);
-
-                            let newSelectedData = self.selectedData.slice();
-
-                            if (self.selectionMode === 'drag-select') { // Make selection
-                                self.anomalyProblemData.forEach((point, index) => {
-                                    let tx = self.transform.applyX(self.preMappedX[index]);
-                                    newSelectedData[index] = (tx >= box.x) && (tx <= (box.x + box.width));
-                                    newSelectedData[index] = newSelectedData[index] || oldSelected [index];
-                                });
-                            }
-                            else {  // De-select
-                                self.anomalyProblemData.forEach((point, index) => {
-                                    let tx = self.transform.applyX(self.preMappedX[index]);
-                                    newSelectedData[index] = !(tx >= box.x && tx <= box.x + box.width);
-                                    newSelectedData[index] = newSelectedData[index] && oldSelected [index];
-                                });
-                            }
-
-                            self.$store.commit('updateSelectedData', newSelectedData);
-
-                            // console.log(newSelectedData);
-
-
-                        }
-                    }
-
-                    function selectMouseup() {
-                        // remove selection frame
-                        svg.selectAll('rect.selection').remove();
-                    }
-
-                    svg.on('mousedown.modes', selectMousedown)
-                        .on('mousemove.modes', selectMousemove)
-                        .on('mouseup.modes', selectMouseup);
-
-                    canvases.on('mousedown.modes', selectMousedown)
-                        .on('mousemove.modes', selectMousemove)
-                        .on('mouseup.modes', selectMouseup);
-                }
+                this.configureSelectionMode();
             }
         },
 
