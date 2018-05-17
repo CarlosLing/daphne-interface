@@ -30,7 +30,21 @@ functionalityTypes.set('DataLoader', {
         // Here we will be listing the sample data sets available
         {name: "", value: ""},
         {name: "Temperature", value: "sample.csv"},
-        {name: "Traffic", value: "sample_2.csv"}
+        {name: "Traffic", value: "sample_2.csv"},
+        {name: "Satellite", value: "SatelliteBattery.csv"}
+    ]
+});
+
+functionalityTypes.set('DatabaseLoader', {
+    title: 'Anomaly Database Loader',
+    component: 'DatabaseLoader',
+    class: 'database-loader',
+    minSize: 'one-third',
+    maxRepeat: 1,
+    optionsList: [
+        // Here we will be listing the sample data sets available
+        {name: "", value: ""},
+        {name: "Satellite", value: "SatelliteBattery.csv"}
     ]
 });
 
@@ -103,6 +117,7 @@ const state = {
         { name: 'DesignBuilder', title: 'Design Builder', icon: 'fa-search' },
         { name: 'AnomalyDetection', title: 'Anomaly Detection', icon: 'fa-chart-bar' },
         { name: 'DataLoader', title: 'Data Loader', icon: 'fa-upload' },
+        { name: 'DatabaseLoader', title: 'Anomaly Database Loader', icon: 'fa-upload' },
         { name: 'AnomalyQuestions', title: 'Questions', icon: 'fa-question-circle' },
         { name: 'DataMining', title: 'Data Mining', icon: 'fa-chart-bar' },
         { name: 'EOSSFilter', title: 'Filter', icon: 'fa-filter' },
@@ -118,6 +133,7 @@ const state = {
         'AnomalyDetection': 0,
         'AnomalyQuestions': 0,
         'DataLoader': 0,
+        'DatabaseLoader': 0,
         'DataMining': 0,
         'EOSSFilter': 0,
         'FeatureApplication': 0,

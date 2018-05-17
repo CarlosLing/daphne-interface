@@ -11,6 +11,8 @@ import experiment from './modules/experiment';
 // Anomaly code
 import anomaly from './modules/anomaly-problem';
 import anomalyPlot from './modules/anomaly-plot';
+import anomalyInfo from './modules/anomaly-info';
+import anomalyDiagnose from './modules/anomaly-diagnose';
 
 Vue.use(Vuex);
 
@@ -37,6 +39,8 @@ export default new Vuex.Store({
         tradespacePlot,
         anomaly,
         anomalyPlot,
+        anomalyInfo,
+        anomalyDiagnose,
         functionalityList,
         dataMining,
         filter,

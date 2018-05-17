@@ -3,19 +3,19 @@
         <div class="panel-block"><b>Select a Sample DataSet...</b></div>
         <div class="panel-block">
             <div class="select is-fullwidth">
-                <select v-model="selectedDataSet">
+                <select v-model="selectedDatabase">
                     <option v-for="option in dataSetOptions" v-bind:value="option.value" v-bind:key="option.value">{{ option.name }}</option>
                 </select>
             </div>
-            <button class="button" id="loadData-button" @click="loadData">Load</button>
+            <button class="button" id="loadData-button" @click="loadDatabase">Load</button>
         </div>
-        <div class="panel-block"><b>...Or Upload your Data here</b></div>
+        <div class="panel-block"><b>...Or Upload your Database here</b></div>
         <div class="panel-block functionality">
-            <p>(Remember to include a column called "timestamp" which contains the time information)</p>
+            <p>Database must include 'timestamp'(Time when the anomaly took place), 'anomalyType'(Anomaly Diagnose), and 'anomalyAction'(Action taken to )</p>
             <div class="content">
                 <div class="file is-large">
                     <label class="file-label">
-                        <input class="file-input" type="file" name="resume" @change="onFileChange">
+                        <input class="file-input" type="file" name="resume" @change="onDatabaseChange">
                         <span class="file-cta">
                             <span class="file-icon">
                                 <i class="fas fa-upload"></i>
@@ -29,9 +29,9 @@
             </div>
         </div>
         <div class="panel-block"><b>Loaded data: </b>
-            <div v-if="!isDataLoaded">No Data is loaded yet</div>
+            <div v-if="!isDatabaseLoaded">No DataBase loaded yet</div>
             <div v-else>
-                {{loadedData}}
+                {{loadedDatabase}}
             </div>
         </div>
     </div>
@@ -39,13 +39,13 @@
 
 <script>
     export default {
-        name: "DataLoader",
+        name: "DatabaseLoader",
 
         data() {
             return {
-                isDataLoaded: false,
-                selectedDataSet: '',
-                loadedData: ''
+                isDatabaseLoaded: false,
+                selectedDatabase: '',
+                loadedDatabase: '',
             }
         },
 
@@ -57,20 +57,19 @@
         },
 
         methods:{
-            loadData(){
-                this.$store.dispatch('loadAnomalyData', this.selectedDataSet);
-                this.loadedData = this.selectedDataSet + "(Sample data)"; // todo this logic must be into the store
-                this.isDataLoaded = true;
+            loadDatabase(){
+                this.$store.dispatch('loadAnomalyDatabase', this.selectedDatabase);
+                this.loadedDatabase = this.selectedDatabase + "(Sample data)"; // todo this logic must be into the store
+                this.isDatabaseLoaded = true;
             },
-            onFileChange() {
+            onDatabaseChange() {
                 let  fileField = document.querySelector("input[type='file']");
-                this.$store.dispatch('loadAnomalyDataFromFile', fileField.files[0]);
-                this.isDataLoaded = true;
-                this.loadedData = fileField.files[0]['name'] + "(Uploaded)";
+                this.$store.dispatch('loadAnomalyDatabaseFromFile', fileField.files[0]);
+                this.isDatabaseLoaded = true;
+                this.loadedDatabase = fileField.files[0]['name'] + "(Uploaded)";
             }
         }
     }
-
 </script>
 
 <style scoped>

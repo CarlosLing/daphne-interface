@@ -26,6 +26,7 @@
     import AnomalyDetection from './AnomalyDetection';
     import DataLoader from './DataLoader';
     import AnomalyQuestions from './AnomalyQuestions'
+    import DatabaseLoader from './DatabaseLoader';
 
     let sizeScale = [
         'one-third',
@@ -51,6 +52,7 @@
             FeatureApplication,
             AnomalyDetection,
             DataLoader,
+            DatabaseLoader,
             AnomalyQuestions
         },
         computed: {
