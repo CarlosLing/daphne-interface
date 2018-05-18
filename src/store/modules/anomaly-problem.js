@@ -7,6 +7,7 @@ const state = {
     anomalyProblemData: [],
     anomalyVariables: [],
     anomalyVariablesCorrelation: [],
+    anomalyVariablesCorrelationSpearman: [],
     allDetectedAnomalies: [],
     variableChosen: [],
     isRunning: false,
@@ -60,6 +61,10 @@ const getters = {
 
     getAnomalyVariablesCorrelation(state){ // Todo Implement correlation functionality
         return state.anomalyVariablesCorrelation
+    },
+
+    getAnomalyVariablesCorrelationSpearman(state){
+        return state.anomalyVariablesCorrelationSpearman
     },
 
     getAnomalyVariables(state) {
@@ -233,6 +238,7 @@ const actions = {
                 commit('updateAnomalyData', data['data']);  // Todo simplify by declaring it in a function
                 commit('updateAnomalyVariables', data['variables']);
                 commit('updateAnomalyVariablesCorrelation', data['correlation']);
+                commit('updateAnomalyVariablesCorrelationSpearman', data['correlationSpearman']);
                 commit('initializeAlgorithmsResultVectors', getters.getOptionsListAlgorithm);
             }
             else{
@@ -263,6 +269,7 @@ const actions = {
                 commit('updateAnomalyData', data['data']);
                 commit('updateAnomalyVariables', data['variables']);
                 commit('updateAnomalyVariablesCorrelation', data['correlation']);
+                commit('updateAnomalyVariablesCorrelationSpearman', data['correlationSpearman']);
                 commit('initializeAlgorithmsResultVectors', getters.getOptionsListAlgorithm);
             }
             else{
@@ -287,6 +294,7 @@ const actions = {
                 detectedOneVarAnomalies: getters.getDetectedOneVarAnomalies,
                 detectedMultiVarAnomalies: getters.getDetectedMultiVarAnomalies,
                 correlation: getters.getAnomalyVariablesCorrelation,
+                correlationSpearman: getters.getAnomalyVariablesCorrelationSpearman,
                 selectedData: getters.getSelectedData,
                 database: getters.getAnomalyDatabase,
                 listSelectedVariables: state.listSelectedVariables
@@ -344,6 +352,7 @@ const actions = {
                         commit('updateAnomalyData', data['data']['data']);
                         commit('updateAnomalyVariables', data['data']['variables']);
                         commit('updateAnomalyVariablesCorrelation', data['data']['correlation']);
+                        commit('updateAnomalyVariablesCorrelationSpearman', data['data']['correlationSpearman']);
                         commit('initializeAlgorithmsResultVectors', getters.getOptionsListAlgorithm);
                     }
                     commit('switchDrawAnomalies');
@@ -385,6 +394,10 @@ const mutations = {
 
     updateAnomalyVariablesCorrelation(state, correlations){
         state.anomalyVariablesCorrelation = correlations
+    },
+
+    updateAnomalyVariablesCorrelationSpearman(state, correlations){
+        state.anomalyVariablesCorrelationSpearman = correlations
     },
 
     initializeAlgorithmsResultVectors(state, optionsListAlgorithm){

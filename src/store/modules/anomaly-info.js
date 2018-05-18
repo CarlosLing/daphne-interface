@@ -119,7 +119,7 @@ questionsInfo['detectNumber'] = {
 questionsInfo['MethodsAgreement'] = {
     name: 'Is there agreement with ...(Method 1) and ...(Method 2), in the variable selected (if UniVariate)?',
     parameters: [
-        {name: 'Relation Radius', variable:"radius", defaultValue: 3, value: 3, varType:"int"}
+        {name: 'Maximum # steps to consider influence between anomalies', variable:"radius", defaultValue: 3, value: 3, varType:"int"}
     ],
     parametersOptions: [
         {name: "Method 1", variable:"selectedAlgorithm", value: '', subIndex: 'One', type: "Algorithm"},
@@ -137,6 +137,7 @@ questionsInfo['Correlations'] = {
     ],
     parametersOptions: [],
     parametersCheckbox: [
+        {name: "Show Spearman's correlation", variable:'Spearman', defaultValue: false, value: false},
         {name: 'Analyze all the variables', variable:'analyzeAllVariables', defaultValue: true, value: true}
     ],
     listVariables: false
