@@ -132,7 +132,7 @@ const actions = {
 
             if (state.methodsAPI.includes(Method)) {
                 console.log(reqData);
-                let dataResponse = await fetchPost('api/anomaly/' + Method, reqData, true);
+                let dataResponse = await fetchPost('/api/anomaly/' + Method, reqData, true);
 
                 if (dataResponse.ok) {
                     let data = await dataResponse.json();
@@ -301,7 +301,7 @@ const actions = {
                 reqData[parameter.variable] = parameter.value;
             });
 
-            let dataResponse = await fetchPost('api/anomaly/analysis/' + questionCode, reqData, true);
+            let dataResponse = await fetchPost('/api/anomaly/analysis/' + questionCode, reqData, true);
 
             // Process response
             if (dataResponse.ok) {
