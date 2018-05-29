@@ -153,7 +153,10 @@ const mutations = {
     },
 
     clearClickedData(state){
-        state.clickedData = [];
+        state.clickedData = {
+            dataPoint: [],
+            anomalyScore: []
+        };
     }
 
 

@@ -113,18 +113,18 @@ let newFunctionalityId = 0;
 // shape: [{ id, quantity }]
 const state = {
     availableFunctionalities: [
-        { name: 'DaphneAnswer', title: 'Answers', icon: 'fa-comments' },
-        { name: 'DesignBuilder', title: 'Design Builder', icon: 'fa-search' },
+        // { name: 'DaphneAnswer', title: 'Answers', icon: 'fa-comments' },
+        // { name: 'DesignBuilder', title: 'Design Builder', icon: 'fa-search' },
         { name: 'AnomalyDetection', title: 'Anomaly Detection', icon: 'fa-chart-bar' },
         { name: 'DataLoader', title: 'Data Loader', icon: 'fa-upload' },
         { name: 'DatabaseLoader', title: 'Anomaly Database Loader', icon: 'fa-upload' },
         { name: 'AnomalyQuestions', title: 'Questions', icon: 'fa-question-circle' },
-        { name: 'DataMining', title: 'Data Mining', icon: 'fa-chart-bar' },
-        { name: 'EOSSFilter', title: 'Filter', icon: 'fa-filter' },
-        { name: 'FeatureApplication', title: 'Feature Application', icon: 'fa-sitemap' },
-        { name: 'OrbitInstrInfo', title: 'Orbits and Instruments Information', icon: 'fa-book' },
-        { name: 'AvailableCommands', title: 'Available Commands', icon: 'fa-book' },
-        { name: 'CommandsInformation', title: 'Commands Information', icon: 'fa-book' }
+        // { name: 'DataMining', title: 'Data Mining', icon: 'fa-chart-bar' },
+        // { name: 'EOSSFilter', title: 'Filter', icon: 'fa-filter' },
+        // { name: 'FeatureApplication', title: 'Feature Application', icon: 'fa-sitemap' },
+        // { name: 'OrbitInstrInfo', title: 'Orbits and Instruments Information', icon: 'fa-book' },
+        // { name: 'AvailableCommands', title: 'Available Commands', icon: 'fa-book' },
+        // { name: 'CommandsInformation', title: 'Commands Information', icon: 'fa-book' }
     ],
     functionalities: [],
     functionalityCount: {

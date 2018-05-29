@@ -1,3 +1,4 @@
+import {fetchPost} from "../../scripts/fetch-helpers";
 
 const state = {
     anomalyDatabase: []
@@ -14,14 +15,8 @@ const actions = {
         try {
             let reqData = new FormData();
             reqData.append('filename', fileName);
-            let dataResponse = await fetch (
-                '/api/anomaly/import-database',
-                {
-                    method: 'POST',
-                    body:reqData,
-                    credentials: "same-origin"
-                }
-            );
+
+            let dataResponse = await fetchPost('/api/anomaly/import-database', reqData);
 
             if (dataResponse.ok){
                 let data = await dataResponse.json();
@@ -40,14 +35,8 @@ const actions = {
         try {
             let reqData = new FormData();
             reqData.append('file', file);
-            let dataResponse = await fetch (
-                '/api/anomaly/import-database-from-file',
-                {
-                    method: 'POST',
-                    body:reqData,
-                    credentials: "same-origin"
-                }
-            );
+
+            let dataResponse = await fetchPost('/api/anomaly/import-database-from-file', reqData);
 
             if (dataResponse.ok){
                 let data = await dataResponse.json();

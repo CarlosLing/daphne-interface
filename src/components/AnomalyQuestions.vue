@@ -102,9 +102,9 @@
 
         methods:{
             selectAnomalyQuestion(){  // Fixes the question parameters, these might be modified in the functionality or asked by daphne
-                this.questionParameters = this.getQuestionParameters(this.selectedQuestion);
-                this.questionParametersOption = this.getQuestionParametersOption(this.selectedQuestion);
-                this.questionParametersCheckbox = this.getQuestionParametersCheckbox(this.selectedQuestion);
+                this.questionParameters = JSON.parse(JSON.stringify(this.getQuestionParameters(this.selectedQuestion)));
+                this.questionParametersOption = JSON.parse(JSON.stringify(this.getQuestionParametersOption(this.selectedQuestion)));
+                this.questionParametersCheckbox = JSON.parse(JSON.stringify(this.getQuestionParametersCheckbox(this.selectedQuestion)));
                 this.questionListVariables = this.getQuestionListVariables(this.selectedQuestion);
                 this.listVariables = [];
                 this.anomalyVariables.forEach((variable) =>{
@@ -122,6 +122,9 @@
                 this.$store.commit('updateQuestionParameters', this.questionParameters);
                 this.$store.commit('updateQuestionParametersOption', this.questionParametersOption);
                 this.$store.commit('updateQuestionParametersCheckbox', this.questionParametersCheckbox);
+                this.questionParameters = JSON.parse(JSON.stringify(this.getQuestionParameters(this.selectedQuestion)));
+                this.questionParametersOption = JSON.parse(JSON.stringify(this.getQuestionParametersOption(this.selectedQuestion)));
+                this.questionParametersCheckbox = JSON.parse(JSON.stringify(this.getQuestionParametersCheckbox(this.selectedQuestion)));
                 this.$store.commit('updateListSelectedVariables', this.listSelectedVariables);
                 this.$store.dispatch('answerAnomalyQuestion', this.selectedQuestion);
             }

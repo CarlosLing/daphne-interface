@@ -38,6 +38,7 @@
 
 <script>
     import {mapGetters} from 'vuex'
+    import * as _ from "lodash-es";
 
     export default {
         name: "AnomalyDetection",
@@ -68,7 +69,7 @@
         },
         methods: {
             selectAlgorithm() {
-                this.algorithmsParameters = this.getAlgorithmParameters(this.selectedAlgorithm);
+                this.algorithmsParameters = JSON.parse(JSON.stringify(this.getAlgorithmParameters(this.selectedAlgorithm)));
                 if (this.isAlgorithmMultiVariate(this.selectedAlgorithm)){
                     this.$store.commit('updateMultiVarAlgorithmSelected', this.selectedAlgorithm);
                     this.oneVarAlgorithm = false;
@@ -82,6 +83,7 @@
             },
             runAlgorithm(){
                 this.$store.commit('updateAlgorithmParameters', this.algorithmsParameters);
+                this.algorithmsParameters = JSON.parse(JSON.stringify(this.getAlgorithmParameters(this.selectedAlgorithm)));
                 if (this.applyToAllVariables && this.oneVarAlgorithm){
                     this.variableList.forEach((variable) => {
                         this.$store.commit("updateVariableChosen", variable);

@@ -20,6 +20,7 @@
     "d3": "^5.0.1",
     "d3-selection-multi": "^1.0.1",
     "intro.js": "^2.8.0-alpha.1",
+    "js-cookie": "^2.2.0",
     "lodash-es": "^4.17.8",
     "speechkitt": "^1.0.0",
     "vue": "^2.5.16",

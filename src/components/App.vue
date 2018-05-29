@@ -33,6 +33,7 @@
                 </nav>
                 <section class="section is-small">
                     <div class="columns is-mobile">
+                        <!--<tradespace-plot></tradespace-plot>-->
                         <anomaly-plot></anomaly-plot>
                     </div>
                     <functionality-list></functionality-list>
@@ -137,29 +138,8 @@
             this.$store.commit('setProblem', EOSS);
             this.$store.commit('setFilter', EOSSFilter);
 
-            // Experiment
-            /*this.$store.dispatch('recoverExperiment').then(() => {
-                this.$store.commit('setIsRecovering', false);
-                // Only start experiment if it wasn't already running
-                if (!this.inExperiment) {
-                    this.$store.dispatch('startExperiment').then(() => {
-                        this.$store.commit('setInExperiment', true);
-                        this.$store.commit('setExperimentStage', 'tutorial');
-                    });
-                }
-            });*/
-
             this.$store.commit('addFunctionality', 'AnomalyDetection');
             this.$store.commit('addFunctionality', 'DataLoader');
-            // this.$store.commit('addFunctionality', 'DesignBuilder');
-            // this.$store.commit('addFunctionality', 'DataMining');
-            // this.$store.commit('addFunctionality', 'FeatureApplication');
-            // this.$store.commit('addFunctionality', 'EOSSFilter');
-            // this.$store.commit('addFunctionality', 'DaphneAnswer');
-            // this.$store.commit('addFunctionality', 'OrbitInstrInfo');
-            // this.$store.commit('addFunctionality', 'AvailableCommands');
-            // this.$store.commit('addFunctionality', 'CommandsInformation');
-            this.$store.dispatch('loadNewData', 'EOSS_data_recalculated.csv');
 
             // New Anomaly detection code
             this.$store.dispatch('loadAnomalyData', 'sample.csv');

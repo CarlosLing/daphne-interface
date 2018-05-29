@@ -524,7 +524,7 @@
                             }
                         }
                         context.beginPath();
-                        context.arc(tx, ty, 3.3, 0, 2 * Math.PI);
+                        context.arc(tx, ty, 5, 0, 2 * Math.PI);
                         context.fill();
                     }
                 });

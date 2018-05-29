@@ -1,4 +1,5 @@
 import store from "../index";
+import {fetchPost} from "../../scripts/fetch-helpers";
 
 // Defines the Name given to the anomaly score name from the algorithms output
 let anomalyScoreName = "anomalyScore";
@@ -130,17 +131,8 @@ const actions = {
             });
 
             if (state.methodsAPI.includes(Method)) {
-                let dataResponse = await fetch(
-                    'api/anomaly/' + Method,
-                    {
-                        method: 'POST',
-                        body: JSON.stringify(reqData),
-                        headers: new Headers({
-                            'Content-Type': 'application/json'
-                        }),
-                        credentials: 'same-origin'
-                    }
-                );
+                console.log(reqData);
+                let dataResponse = await fetchPost('api/anomaly/' + Method, reqData, true);
 
                 if (dataResponse.ok) {
                     let data = await dataResponse.json();
@@ -224,14 +216,8 @@ const actions = {
         try {
             let reqData = new FormData();
             reqData.append('filename', fileName);
-            let dataResponse = await fetch (
-                '/api/anomaly/import-data',
-                {
-                    method: 'POST',
-                    body: reqData,
-                    credentials: 'same-origin'
-                }
-            );
+
+            let dataResponse = await fetchPost('/api/anomaly/import-data', reqData);
 
             if (dataResponse.ok) {
                 let data = await dataResponse.json();
@@ -255,14 +241,8 @@ const actions = {
         try {
             let reqData = new FormData();
             reqData.append('file', file);
-            let dataResponse = await fetch (
-                '/api/anomaly/read-data',
-                {
-                    method: 'POST',
-                    body: reqData,
-                    credentials: 'same-origin'
-                }
-            );
+
+            let dataResponse = await fetchPost('/api/anomaly/read-data', reqData);
 
             if (dataResponse.ok) {
                 let data = await dataResponse.json();
@@ -321,17 +301,7 @@ const actions = {
                 reqData[parameter.variable] = parameter.value;
             });
 
-            let dataResponse = await fetch(
-                'api/anomaly/analysis/' + questionCode,
-                {
-                    method: 'POST',
-                    body: JSON.stringify(reqData),
-                    headers: new Headers({
-                        'Content-Type': 'application/json'
-                    }),
-                    credentials: 'same-origin'
-                }
-            );
+            let dataResponse = await fetchPost('api/anomaly/analysis/' + questionCode, reqData, true);
 
             // Process response
             if (dataResponse.ok) {
