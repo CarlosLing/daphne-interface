@@ -33,7 +33,6 @@
                 </nav>
                 <section class="section is-small">
                     <div class="columns is-mobile">
-                        <!--<tradespace-plot></tradespace-plot>-->
                         <anomaly-plot></anomaly-plot>
                     </div>
                     <functionality-list></functionality-list>
